@@ -1,0 +1,28 @@
+Abastece+ Backend rodando na porta 3334
+CBC configurado: 192.168.0.91:2001
+Para apontar ao posto: CBC_HOST=<IP> node server.js
+✅ Banco de dados inicializado com sucesso
+  [CBC] Conectado em 192.168.0.91:2001
+[17:04:10] POST /admin/bicos
+[17:04:10] GET /visualizacao
+[17:08:47] POST /auth/login
+[17:09:17] POST /bico/validar
+[17:09:35] POST /autorizar
+[17:09:37] GET /visualizacao
+[17:09:38] GET /abastecimento
+  [CBC] (&A) raw: "(00280000459760903E00250C231803064225007309397100AF)"
+[17:09:38] POST /incrementar
+[17:11:54] POST /auth/login
+[17:12:05] POST /bico/validar
+[17:12:13] POST /autorizar
+[17:12:15] GET /visualizacao
+[17:12:16] GET /abastecimento
+  [CBC] (&A) raw: "(01000002638537903E005A052318040642260002670204009A)"
+[17:12:16] POST /incrementar
+[17:14:52] POST /auth/login
+[17:15:01] POST /bico/validar
+[17:15:19] POST /autorizar
+[17:15:22] GET /visualizacao
+[17:15:22] GET /abastecimento
+  [CBC] (&A) raw: "(00600001583137903E005A4D231805064227008991017400C0)"
+[17:15:23] POST /incrementar

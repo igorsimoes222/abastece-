@@ -1,0 +1,1 @@
+Erro: insert into `bicos` (`ativo`, `codigo_adesivo`, `combustivel`, `numero`, `posto_id`) values (1, '4444', 'Gasolina Comum', '44', NULL) - NOT NULL constraint failed: bicos.posto_id
