@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "PostoPrático",
+    "slug": "postopratico",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0d1117"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0d1117"
+      },
+      "package": "com.postopratico.app"
+    },
+    "ios": {
+      "bundleIdentifier": "com.postopratico.app",
+      "supportsTablet": false
+    },
+    "scheme": "postopratico",
+    "plugins": [
+      "expo-router",
+      "expo-location"
+    ]
+  }
+}

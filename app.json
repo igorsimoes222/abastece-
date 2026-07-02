@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Abastece+",
+    "slug": "abasteceplus",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "backgroundColor": "#0D1B2E"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0D1B2E"
+      },
+      "package": "com.abasteceplus.app",
+      "usesCleartextTraffic": true
+    },
+    "ios": {
+      "bundleIdentifier": "com.abasteceplus.app",
+      "supportsTablet": false
+    },
+    "scheme": "abasteceplus",
+    "plugins": [
+      "expo-location"
+    ]
+  }
+}

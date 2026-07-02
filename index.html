@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abastece+ — Telas</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #050D05;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 40px 32px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .logo { font-size: 28px; font-weight: 900; color: white; }
+    .logo span { color: #6CC24A; }
+    .tagline { font-size: 13px; color: #6CC24A; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: #0F1F0F;
+      border: 1px solid #2A3A2A;
+      border-radius: 20px;
+      padding: 20px;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card:hover {
+      border-color: #6CC24A;
+      background: rgba(108,194,74,0.06);
+      transform: translateY(-2px);
+    }
+
+    .card-num {
+      font-size: 11px;
+      font-weight: 800;
+      color: #6CC24A;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .card-icon { font-size: 36px; }
+    .card-title { font-size: 16px; font-weight: 800; color: white; }
+    .card-desc { font-size: 12px; color: #7A8F7A; line-height: 1.5; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: #7A8F7A;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin: 32px 0 12px;
+    }
+
+    .flow-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .flow-step {
+      background: rgba(108,194,74,0.1);
+      border: 1px solid rgba(108,194,74,0.2);
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #6CC24A;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .flow-step:hover { background: rgba(108,194,74,0.2); }
+    .flow-arrow { color: #2A3A2A; font-size: 16px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <div class="logo">Abastece<span>+</span></div>
+      <div class="tagline">Pague · Abasteça · Siga</div>
+    </div>
+  </div>
+
+  <div class="section-label">Fluxo principal de uso</div>
+  <div class="flow-line">
+    <a href="01-splash.html" class="flow-step">01 Splash</a>
+    <span class="flow-arrow">→</span>
+    <a href="02-onboarding.html" class="flow-step">02 Onboarding</a>
+    <span class="flow-arrow">→</span>
+    <a href="03-login.html" class="flow-step">03 Login</a>
+    <span class="flow-arrow">→</span>
+    <a href="04-home.html" class="flow-step">04 Home / Mapa</a>
+    <span class="flow-arrow">→</span>
+    <a href="05-abastecer.html" class="flow-step">05 Abastecer</a>
+    <span class="flow-arrow">→</span>
+    <a href="06-aguardando.html" class="flow-step">06 Aguardando</a>
+    <span class="flow-arrow">→</span>
+    <a href="07-comprovante.html" class="flow-step">07 Comprovante</a>
+  </div>
+
+  <div class="section-label">Todas as telas</div>
+  <div class="grid">
+    <a href="01-splash.html" class="card">
+      <div class="card-num">01</div>
+      <div class="card-icon">🌱</div>
+      <div class="card-title">Splash</div>
+      <div class="card-desc">Tela de abertura com logo e animação de carregamento</div>
+    </a>
+    <a href="02-onboarding.html" class="card">
+      <div class="card-num">02</div>
+      <div class="card-icon">✨</div>
+      <div class="card-title">Onboarding</div>
+      <div class="card-desc">3 slides apresentando as funcionalidades do app</div>
+    </a>
+    <a href="03-login.html" class="card">
+      <div class="card-num">03</div>
+      <div class="card-icon">🔐</div>
+      <div class="card-title">Login / Cadastro</div>
+      <div class="card-desc">Entrada na conta ou criação de novo usuário</div>
+    </a>
+    <a href="04-home.html" class="card">
+      <div class="card-num">04</div>
+      <div class="card-icon">🗺️</div>
+      <div class="card-title">Home — Mapa</div>
+      <div class="card-desc">Mapa com postos próximos, preços e cashback em tempo real</div>
+    </a>
+    <a href="05-abastecer.html" class="card">
+      <div class="card-num">05</div>
+      <div class="card-icon">⛽</div>
+      <div class="card-title">Abastecer</div>
+      <div class="card-desc">Seleção de bomba, modalidade de pagamento e confirmação</div>
+    </a>
+    <a href="06-aguardando.html" class="card">
+      <div class="card-num">06</div>
+      <div class="card-icon">⚡</div>
+      <div class="card-title">Aguardando</div>
+      <div class="card-desc">Progresso em tempo real do abastecimento na bomba</div>
+    </a>
+    <a href="07-comprovante.html" class="card">
+      <div class="card-num">07</div>
+      <div class="card-icon">🧾</div>
+      <div class="card-title">Comprovante</div>
+      <div class="card-desc">Resumo do abastecimento, cashback ganho e avaliação</div>
+    </a>
+    <a href="08-carteira.html" class="card">
+      <div class="card-num">08</div>
+      <div class="card-icon">👛</div>
+      <div class="card-title">Carteira</div>
+      <div class="card-desc">Saldo, cashback, formas de pagamento e extrato</div>
+    </a>
+    <a href="09-historico.html" class="card">
+      <div class="card-num">09</div>
+      <div class="card-icon">🕐</div>
+      <div class="card-title">Histórico</div>
+      <div class="card-desc">Todos os abastecimentos com gráfico mensal e filtros</div>
+    </a>
+    <a href="10-perfil.html" class="card">
+      <div class="card-num">10</div>
+      <div class="card-icon">👤</div>
+      <div class="card-title">Perfil</div>
+      <div class="card-desc">Dados do usuário, veículos cadastrados e configurações</div>
+    </a>
+  </div>
+
+</body>
+</html>

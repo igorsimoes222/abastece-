@@ -1,0 +1,137 @@
+{
+  "descricao": "Pacote de ícones padronizados para marcadores de postos no mapa. Não são logos oficiais; são ícones genéricos/representativos para protótipo.",
+  "formatos": [
+    "PNG 128x128",
+    "PNG 256x256",
+    "SVG"
+  ],
+  "aviso": "Marcas como Petrobras, Shell e Ipiranga são registradas. Para produção, substitua pelos arquivos oficiais/licenciados.",
+  "arquivos": [
+    {
+      "nome": "petrobras",
+      "iniciais": "PB",
+      "cor_base": "#1FA463",
+      "cor_destaque": "#F2C94C"
+    },
+    {
+      "nome": "shell",
+      "iniciais": "SH",
+      "cor_base": "#E53935",
+      "cor_destaque": "#FFD43B"
+    },
+    {
+      "nome": "ipiranga",
+      "iniciais": "IP",
+      "cor_base": "#0057B8",
+      "cor_destaque": "#FFD400"
+    },
+    {
+      "nome": "sete_estrelas",
+      "iniciais": "7E",
+      "cor_base": "#0F2D5C",
+      "cor_destaque": "#67D63D"
+    },
+    {
+      "nome": "ale",
+      "iniciais": "AL",
+      "cor_base": "#1E88E5",
+      "cor_destaque": "#FDD835"
+    },
+    {
+      "nome": "vibra",
+      "iniciais": "VB",
+      "cor_base": "#174EA6",
+      "cor_destaque": "#34A853"
+    },
+    {
+      "nome": "raizen",
+      "iniciais": "RZ",
+      "cor_base": "#E65100",
+      "cor_destaque": "#FFB300"
+    },
+    {
+      "nome": "br_mania",
+      "iniciais": "BR",
+      "cor_base": "#009739",
+      "cor_destaque": "#FEDD00"
+    },
+    {
+      "nome": "sim_rede",
+      "iniciais": "SM",
+      "cor_base": "#2E7D32",
+      "cor_destaque": "#FFFFFF"
+    },
+    {
+      "nome": "rodoil",
+      "iniciais": "RD",
+      "cor_base": "#D32F2F",
+      "cor_destaque": "#FFFFFF"
+    },
+    {
+      "nome": "totalenergies",
+      "iniciais": "TE",
+      "cor_base": "#1A73E8",
+      "cor_destaque": "#E91E63"
+    },
+    {
+      "nome": "texaco",
+      "iniciais": "TX",
+      "cor_base": "#C62828",
+      "cor_destaque": "#FFFFFF"
+    },
+    {
+      "nome": "esso",
+      "iniciais": "ES",
+      "cor_base": "#0D47A1",
+      "cor_destaque": "#E53935"
+    },
+    {
+      "nome": "gulf",
+      "iniciais": "GF",
+      "cor_base": "#F57C00",
+      "cor_destaque": "#1976D2"
+    },
+    {
+      "nome": "equador",
+      "iniciais": "EQ",
+      "cor_base": "#2E7D32",
+      "cor_destaque": "#FFCA28"
+    },
+    {
+      "nome": "potencial",
+      "iniciais": "PT",
+      "cor_base": "#1565C0",
+      "cor_destaque": "#FFB300"
+    },
+    {
+      "nome": "petronac",
+      "iniciais": "PN",
+      "cor_base": "#263238",
+      "cor_destaque": "#66BB6A"
+    },
+    {
+      "nome": "charrua",
+      "iniciais": "CH",
+      "cor_base": "#6D4C41",
+      "cor_destaque": "#FF7043"
+    },
+    {
+      "nome": "idaza",
+      "iniciais": "ID",
+      "cor_base": "#00897B",
+      "cor_destaque": "#FFFFFF"
+    },
+    {
+      "nome": "fan",
+      "iniciais": "FN",
+      "cor_base": "#4527A0",
+      "cor_destaque": "#FFCA28"
+    },
+    {
+      "nome": "generico",
+      "iniciais": "⛽",
+      "cor_base": "#0F1D35",
+      "cor_destaque": "#67D63D"
+    }
+  ]
+}
