@@ -106,23 +106,60 @@ async function cmdVisualizacao() {
   return bicos;
 }
 
+// Calcula checksum CBC: soma ASCII dos chars apos '(' ate antes de KK, low byte em hex 2 chars
+function calcChecksum(conteudo) {
+  let soma = 0;
+  for (let i = 0; i < conteudo.length; i++) soma += conteudo.charCodeAt(i);
+  return (soma & 0xFF).toString(16).toUpperCase().padStart(2, '0');
+}
+
+// Comando Preset (&P): autoriza bico para valor maximo
+// bicoDecimal: numero decimal do bico (ex: 9, 13) — converte para hex
+// valorCentavos: valor em centavos (ex: 5000 = R$50,00)
+async function cmdPreset(bicoDecimal, valorCentavos) {
+  const bicoHex   = parseInt(bicoDecimal, 10).toString(16).toUpperCase().padStart(2, '0');
+  const valorStr  = String(Math.round(valorCentavos)).padStart(6, '0');
+  const conteudo  = '&P' + bicoHex + valorStr;
+  const kk        = calcChecksum(conteudo);
+  const cmd       = '(' + conteudo + kk + ')';
+  console.log('  [CBC] Preset:', cmd, '→ bico', bicoHex, 'valor', valorCentavos, 'cts');
+  const rx = await cbcCmd(cmd);
+  console.log('  [CBC] Preset resp:', JSON.stringify(rx));
+  return rx;
+}
+
+// Formato DT435 (&A): TTTTTTLLLLLLPPPPVVCCCCBBDDHHMMNNRRRREEEEEEEEEESKK (50 chars)
+// V = codigo de virgula (hex): bits 0-1=casas do total, bits 2-3=casas do volume, bits 4-5=casas do preco
 async function cmdAbastecimento() {
   const rx = await cbcCmd('(&A)');
   console.log('  [CBC] (&A) raw:', JSON.stringify(rx));
   if (!rx || rx.trim() === '(0)' || rx.trim() === '') return { vazio: true };
-  // Formato: (<data>) sem identificador A
   const m = rx.match(/\((.+)\)/);
-  if (!m || m[1].length < 20) return { vazio: true };
+  if (!m || m[1].length < 34) return { vazio: true };
   const d = m[1];
-  const valorRaw  = parseInt(d.substring(6,  12)) || 0;
-  const volumeRaw = parseInt(d.substring(12, 18)) || 0;
-  const precoRaw  = parseInt(d.substring(18, 22)) || 0;
+
+  const totalRaw  = parseInt(d.substring(0,  6))  || 0;  // T[06] total a pagar
+  const volumeRaw = parseInt(d.substring(6,  12)) || 0;  // L[06] volume abastecido
+  const precoRaw  = parseInt(d.substring(12, 16)) || 0;  // P[04] preco unitario
+  const virgula   = parseInt(d.substring(16, 18), 16) || 0; // V[02] codigo de virgula (hex)
+  // C[04] = d[18:22] — tempo (ignorado aqui)
+  const bicoHex   = d.substring(22, 24);                 // B[02] codigo do bico (hex)
+  const dia       = d.substring(24, 26);                 // D[02]
+  const hora      = d.substring(26, 28);                 // H[02]
+  const minuto    = d.substring(28, 30);                 // M[02]
+  const mes       = d.substring(30, 32);                 // N[02]
+
+  const casasTotal  = (virgula >> 0) & 0x03;  // bits 0-1
+  const casasVolume = (virgula >> 2) & 0x03;  // bits 2-3
+  const casasPreco  = (virgula >> 4) & 0x03;  // bits 4-5
+
+  const bico = parseInt(bicoHex, 16).toString().padStart(2, '0');
   return {
-    indice: d.substring(0, 6),
-    bico:   d.substring(6, 8),
-    valor:  (valorRaw  / 100).toFixed(2),
-    volume: (volumeRaw / 1000).toFixed(3),
-    preco:  (precoRaw  / 100).toFixed(2),
+    bico,
+    valor:  (totalRaw  / Math.pow(10, casasTotal)).toFixed(casasTotal),
+    volume: (volumeRaw / Math.pow(10, casasVolume)).toFixed(casasVolume),
+    preco:  (precoRaw  / Math.pow(10, casasPreco)).toFixed(casasPreco),
+    data:   dia + '/' + mes + ' ' + hora + ':' + minuto,
   };
 }
 
@@ -239,7 +276,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, { ok: true, total: lista.length, itens: lista });
     }
 
-    // POST /autorizar — salva no banco (autorizacao fisica e no concentrador)
+    // POST /autorizar — salva no banco e envia Preset (&P) ao concentrador
     if (req.method === 'POST' && url === '/autorizar') {
       const body = await bodyJson(req);
       const { bico, valor, usuario_id, posto_id } = body;
@@ -256,7 +293,17 @@ const server = http.createServer(async (req, res) => {
         iniciado_em:      new Date().toISOString(),
       });
 
-      return json(res, { ok: true, cicloId, abastecimentoId: id, bico, valor });
+      // Envia Preset ao concentrador CBC para autorizar o bico
+      let presetOk = false;
+      try {
+        const valorCentavos = Math.round(parseFloat(valor) * 100);
+        await cmdPreset(bico, valorCentavos);
+        presetOk = true;
+      } catch (e) {
+        console.error('  [CBC] Preset falhou:', e.message);
+      }
+
+      return json(res, { ok: true, cicloId, abastecimentoId: id, bico, valor, presetOk });
     }
 
     // POST /incrementar — avanca ponteiro (&I)
