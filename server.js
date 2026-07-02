@@ -246,26 +246,55 @@ const server = http.createServer(async (req, res) => {
       return json(res, { ok: true, posto });
     }
 
-    // GET /abastecimento — registro finalizado via (&A)
-    if (req.method === 'GET' && url === '/abastecimento') {
+    // GET /abastecimento?bico=09 — registro finalizado via (&A)
+    // Varre a fila CBC até encontrar o registro do bico solicitado.
+    // Registros de outros bicos são repostos na frente via (&I) sem consumir.
+    // Sem bico informado, retorna o primeiro da fila (comportamento legado).
+    if (req.method === 'GET' && url.startsWith('/abastecimento')) {
       try {
-        const dados = await cmdAbastecimento();
-        if (!dados.vazio && dados.valor) {
-          await knex('abastecimentos')
-            .where({ status: 'aguardando' })
-            .orderBy('id', 'desc')
-            .limit(1)
-            .update({
-              valor_cobrado:   parseFloat(dados.valor)  || 0,
-              volume_litros:   parseFloat(dados.volume) || 0,
-              preco_litro:     parseFloat(dados.preco)  || 0,
-              cashback_gerado: parseFloat(dados.valor) * 0.01,
-              status:          'concluido',
-              concluido_em:    new Date().toISOString(),
-            });
+        const bicoParam = new URL('http://x' + req.url).searchParams.get('bico');
+        const bicoAlvo  = bicoParam ? String(bicoParam).padStart(2, '0') : null;
+
+        let dados = null;
+        const MAX_TENTATIVAS = 20; // evita loop infinito
+
+        for (let i = 0; i < MAX_TENTATIVAS; i++) {
+          const candidato = await cmdAbastecimento();
+          if (candidato.vazio) break; // fila vazia
+
+          const bicoCandidato = String(candidato.bico ?? '').padStart(2, '0');
+
+          if (!bicoAlvo || bicoCandidato === bicoAlvo) {
+            // Achou o registro certo — consome com (&I)
+            dados = candidato;
+            await cmdIncrementar();
+            break;
+          }
+
+          // Registro de outro bico — avança sem processar e continua buscando
+          console.log('  [A] bico ' + bicoCandidato + ' ignorado (buscando ' + bicoAlvo + ')');
+          await cmdIncrementar();
         }
+
+        if (!dados) return json(res, { ok: true, vazio: true });
+
+        // Atualiza o banco com os dados do abastecimento finalizado
+        await knex('abastecimentos')
+          .where({ status: 'aguardando', bico_numero: dados.bico })
+          .orderBy('id', 'desc')
+          .limit(1)
+          .update({
+            valor_cobrado:   parseFloat(dados.valor)  || 0,
+            volume_litros:   parseFloat(dados.volume) || 0,
+            preco_litro:     parseFloat(dados.preco)  || 0,
+            cashback_gerado: parseFloat(dados.valor) * 0.01,
+            status:          'concluido',
+            concluido_em:    new Date().toISOString(),
+          });
+
         return json(res, { ok: true, ...dados });
-      } catch {
+      } catch (e) {
+        console.error('  [A] erro:', e.message);
         return json(res, { ok: true, vazio: true });
       }
     }
