@@ -115,7 +115,7 @@ export default function AbastecendoScreen({ navigation, route }) {
     clearInterval(pollingRef.current);
 
     try {
-      const resultado = await abastecimentoService.confirmarValor();
+      const resultado = await abastecimentoService.confirmarValor(numeroBico);
       const valorFinal = resultado.valorConfirmado
         ? String(resultado.valorConfirmado).replace('.', ',')
         : valorReal;

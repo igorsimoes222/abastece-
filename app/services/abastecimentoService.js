@@ -29,15 +29,15 @@ export const abastecimentoService = {
     return { status: 'abastecendo', valorAtual: b.valor, bico: b.bico };
   },
 
-  // Lê o abastecimento finalizado na HORUSTECH
-  async confirmarValor() {
+  // Lê o abastecimento finalizado na HORUSTECH filtrando pelo bico
+  // O backend já faz (&I) automaticamente após encontrar o registro certo
+  async confirmarValor(numeroBico) {
     if (USE_MOCK) {
       return { valorConfirmado: '87,50', status: 'aguardando_pagamento' };
     }
-    const data = await api.get('/abastecimento');
+    const bicoParam = numeroBico ? `?bico=${numeroBico}` : '';
+    const data = await api.get(`/abastecimento${bicoParam}`);
     if (data.vazio) return { valorConfirmado: null, status: 'sem_dados' };
-    // Avança ponteiro para o próximo abastecimento
-    await api.post('/incrementar', {});
     return {
       valorConfirmado: data.valor,
       volume: data.volume,
