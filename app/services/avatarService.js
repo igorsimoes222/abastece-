@@ -4,7 +4,13 @@ const AVATAR_KEY = '@abasteceplus:avatar';
 
 function uriValida(uri) {
   if (!uri || typeof uri !== 'string') return false;
-  return uri.startsWith('file://') || uri.startsWith('content://') || uri.startsWith('http');
+  return (
+    uri.startsWith('file://') ||
+    uri.startsWith('content://') ||
+    uri.startsWith('http') ||
+    uri.startsWith('blob:') ||
+    uri.startsWith('data:image/')
+  );
 }
 
 export const avatarService = {
