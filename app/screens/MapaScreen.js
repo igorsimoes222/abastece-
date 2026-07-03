@@ -6,6 +6,7 @@ import {
 import { avatarService } from '../services/avatarService';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
+import { Asset } from 'expo-asset';
 import { colors, radius, spacing } from '../../components/theme';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import { useAuth } from '../context/AuthContext';
@@ -76,10 +77,10 @@ const SETE_ESTRELAS = [
 ];
 
 const LOGO_URIS = {
-  shell:     Image.resolveAssetSource(require('../../assets/icons/Shell-Logo-PNG-Photos.png')).uri,
-  ipiranga:  Image.resolveAssetSource(require('../../assets/icons/Ipiranga_monograma_RGB_azul_amarelo.png')).uri,
-  petrobras: Image.resolveAssetSource(require('../../assets/icons/petrobras-br-vector-logo.png')).uri,
-  sete:      Image.resolveAssetSource(require('../../assets/icons/seteestrelas.png')).uri,
+  shell:     Asset.fromModule(require('../../assets/icons/Shell-Logo-PNG-Photos.png')).uri,
+  ipiranga:  Asset.fromModule(require('../../assets/icons/Ipiranga_monograma_RGB_azul_amarelo.png')).uri,
+  petrobras: Asset.fromModule(require('../../assets/icons/petrobras-br-vector-logo.png')).uri,
+  sete:      Asset.fromModule(require('../../assets/icons/seteestrelas.png')).uri,
 };
 
 const BANNERS = [
