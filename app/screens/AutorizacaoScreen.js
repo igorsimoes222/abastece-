@@ -25,10 +25,10 @@ export default function AutorizacaoScreen({ navigation, route }) {
         ende: p.endereco ?? '',
         cidade: p.cidade ?? '',
         uf: p.uf ?? 'SP',
-        preco: parseFloat(p.preco_etanol || 0).toFixed(2).replace('.', ','),
-        precoGasolina: parseFloat(p.preco_gasolina || 0).toFixed(2).replace('.', ','),
-        precoEtanol: parseFloat(p.preco_etanol || 0).toFixed(2).replace('.', ','),
-        precoDiesel: parseFloat(p.preco_diesel || 0).toFixed(2).replace('.', ','),
+        preco: String(p.preco_etanol || '0').replace('.', ','),
+        precoGasolina: String(p.preco_gasolina || '0').replace('.', ','),
+        precoEtanol: String(p.preco_etanol || '0').replace('.', ','),
+        precoDiesel: String(p.preco_diesel || '0').replace('.', ','),
         cashback: String(p.cashback_pct ?? 1),
       });
     }).catch(() => {});
@@ -93,9 +93,9 @@ export default function AutorizacaoScreen({ navigation, route }) {
       // Seleciona o preço/L de acordo com o combustível do bico
       const comb = bicoCombustivel.toLowerCase();
       let precoLitro = posto.preco;
-      if (comb.includes('etanol')) precoLitro = posto.precoEtanol ?? posto.preco;
-      else if (comb.includes('diesel')) precoLitro = posto.precoDiesel ?? posto.preco;
-      else precoLitro = posto.precoGasolina ?? posto.preco;
+      if (comb.includes('etanol')) precoLitro = posto.preco_etanol ?? posto.precoEtanol ?? posto.preco;
+      else if (comb.includes('diesel')) precoLitro = posto.preco_diesel ?? posto.precoDiesel ?? posto.preco;
+      else precoLitro = posto.preco_gasolina ?? posto.precoGasolina ?? posto.preco;
       navigation.navigate('Abastecendo', { posto: { ...posto, preco: precoLitro }, bico, valor });
     } catch (e) {
       console.warn('Erro ao autorizar:', e.message);

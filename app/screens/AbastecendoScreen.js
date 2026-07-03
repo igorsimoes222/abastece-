@@ -92,9 +92,12 @@ export default function AbastecendoScreen({ navigation, route }) {
   const [erroConexao, setErroConexao] = useState(false);
   const [erroMsg, setErroMsg]         = useState('');
 
-  const pollingRef  = useRef(null);
-  const falhasRef   = useRef(0);
-  const faseRef     = useRef('aguardando'); // ref para acessar dentro do interval
+  const pollingRef    = useRef(null);
+  const tickerRef     = useRef(null);
+  const valorAtualRef = useRef(0);  // valor numérico atual exibido (animado)
+  const valorAlvoRef  = useRef(0);  // valor numérico alvo (do último poll)
+  const falhasRef     = useRef(0);
+  const faseRef       = useRef('aguardando');
 
   const fillAnim  = useRef(new Animated.Value(0)).current;
   const blinkAnim = useRef(new Animated.Value(1)).current;
@@ -167,6 +170,12 @@ export default function AbastecendoScreen({ navigation, route }) {
         falhasRef.current = 0;
         setErroConexao(false);
 
+        // Abastecimento concluído detectado via (&A) peek (simulador free-run)
+        if (prog.status === 'concluido') {
+          finalizarAbastecimento();
+          return;
+        }
+
         if (prog.status === 'abastecendo' && parseFloat(prog.valorAtual) > 0) {
           // Bico foi retirado — inicia contagem real
           if (faseRef.current === 'aguardando') {
@@ -175,17 +184,32 @@ export default function AbastecendoScreen({ navigation, route }) {
           }
 
           const v = parseFloat(prog.valorAtual);
-          const vStr = v.toFixed(2).replace('.', ',');
-          setValorReal(vStr);
+          valorAlvoRef.current = v;
 
-          const pctReal = (v / totalValor) * 100;
-          const pctExibir = Math.min(pctReal, 100);
-          setPct(Math.round(pctExibir));
-          Animated.timing(fillAnim, {
-            toValue: pctExibir / 100,
-            duration: 600,
-            useNativeDriver: false,
-          }).start();
+          // Ticker: incrementa suavemente de valorAtual → valorAlvo a cada 100ms
+          clearInterval(tickerRef.current);
+          tickerRef.current = setInterval(() => {
+            const atual = valorAtualRef.current;
+            const alvo  = valorAlvoRef.current;
+            if (Math.abs(alvo - atual) < 0.01) {
+              valorAtualRef.current = alvo;
+              clearInterval(tickerRef.current);
+            } else {
+              // Avança ~10% da diferença por tick (aceleração natural)
+              valorAtualRef.current = atual + (alvo - atual) * 0.15;
+            }
+            const vStr = valorAtualRef.current.toFixed(2).replace('.', ',');
+            setValorReal(vStr);
+
+            const pctReal = (valorAtualRef.current / totalValor) * 100;
+            const pctEx   = Math.min(pctReal, 100);
+            setPct(Math.round(pctEx));
+            Animated.timing(fillAnim, {
+              toValue: pctEx / 100,
+              duration: 90,
+              useNativeDriver: false,
+            }).start();
+          }, 100);
 
           // Bateu o valor autorizado → bomba parou automaticamente
           if (pctReal >= 100) {
@@ -208,7 +232,7 @@ export default function AbastecendoScreen({ navigation, route }) {
       }
     }, 2000);
 
-    return () => clearInterval(pollingRef.current);
+    return () => { clearInterval(pollingRef.current); clearInterval(tickerRef.current); };
   }, []);
 
   const solicitarCancelamento = () => {
@@ -324,6 +348,13 @@ export default function AbastecendoScreen({ navigation, route }) {
                   ? 'O abastecimento inicia assim que o bico for retirado da bomba.'
                   : 'A bomba permanece bloqueada até a finalização do pagamento.'}
               </Text>
+              <TouchableOpacity
+                style={styles.confirmarBtn}
+                onPress={finalizarAbastecimento}
+                disabled={faseRef.current === 'concluindo'}
+              >
+                <Text style={styles.confirmarText}>✔  Confirmar abastecimento</Text>
+              </TouchableOpacity>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setCancelModal(true)}>
                 <Text style={styles.cancelText}>✕  Cancelar abastecimento</Text>
               </TouchableOpacity>
@@ -435,6 +466,12 @@ const styles = StyleSheet.create({
   infoDot: { fontSize: 12, color: colors.border },
   footer: { paddingVertical: 12, alignItems: 'center', gap: 10 },
   footerNote: { fontSize: 11, color: colors.textMuted, textAlign: 'center' },
+  confirmarBtn: {
+    borderWidth: 1.5, borderColor: 'rgba(108,194,74,0.6)',
+    borderRadius: radius.lg, paddingHorizontal: 28, paddingVertical: 12,
+    backgroundColor: 'rgba(108,194,74,0.12)', width: '100%', alignItems: 'center',
+  },
+  confirmarText: { color: colors.verde, fontSize: 14, fontWeight: '800' },
   cancelBtn: {
     borderWidth: 1.5, borderColor: 'rgba(229,57,53,0.5)',
     borderRadius: radius.lg, paddingHorizontal: 28, paddingVertical: 10,

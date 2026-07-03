@@ -19,10 +19,14 @@ export const abastecimentoService = {
     if (USE_MOCK) {
       return { status: 'abastecendo', valorAtual: '45,30', litros: '7,69' };
     }
-    const data = await api.get('/visualizacao');
+    const bicoParam = numeroBico ? `?bico=${String(numeroBico).padStart(2, '0')}` : '';
+    const data = await api.get(`/visualizacao${bicoParam}`);
+
+    // Abastecimento concluído detectado via (&A) peek
+    if (data.concluido) return { status: 'concluido', valorAtual: '0,00' };
+
     const bicos = data.abastecendo || [];
     if (bicos.length === 0) return { status: 'aguardando', valorAtual: '0,00' };
-    // Filtra pelo bico autorizado; se não encontrar, considera aguardando
     const bicoNorm = String(numeroBico ?? '').padStart(2, '0');
     const b = numeroBico ? bicos.find(x => String(x.bico).padStart(2, '0') === bicoNorm) : bicos[0];
     if (!b) return { status: 'aguardando', valorAtual: '0,00' };
