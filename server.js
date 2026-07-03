@@ -91,6 +91,7 @@ cbcConnect();
 
 async function cmdVisualizacao() {
   const rx = await cbcCmd('(&V)');
+  console.log('  [VIS] raw (&V):', JSON.stringify(rx));
   if (!rx || rx.trim() === '(0)' || rx.trim() === '') return [];
   // Formato: (<bico2><valor6>...) — sem identificador V, grupos de 8 chars
   const m = rx.match(/\((.+)\)/);
@@ -113,18 +114,29 @@ function calcChecksum(conteudo) {
   return (soma & 0xFF).toString(16).toUpperCase().padStart(2, '0');
 }
 
-// Comando Preset (&P): autoriza bico para valor maximo
-// bicoDecimal: numero decimal do bico (ex: 9, 13) — converte para hex
-// valorCentavos: valor em centavos (ex: 5000 = R$50,00)
+// Comando Preset (&P): define valor maximo para o bico (por dinheiro = '$')
 async function cmdPreset(bicoDecimal, valorCentavos) {
-  const bicoHex   = parseInt(bicoDecimal, 10).toString(16).toUpperCase().padStart(2, '0');
-  const valorStr  = String(Math.round(valorCentavos)).padStart(6, '0');
-  const conteudo  = '&P' + bicoHex + valorStr;
-  const kk        = calcChecksum(conteudo);
-  const cmd       = '(' + conteudo + kk + ')';
+  const bicoHex  = parseInt(bicoDecimal, 10).toString(16).toUpperCase().padStart(2, '0');
+  const valorStr = String(Math.round(valorCentavos)).padStart(6, '0');
+  const conteudo = '&P' + bicoHex + valorStr;
+  const kk       = calcChecksum(conteudo);
+  const cmd      = '(' + conteudo + kk + ')';
   console.log('  [CBC] Preset:', cmd, '→ bico', bicoHex, 'valor', valorCentavos, 'cts');
   const rx = await cbcCmd(cmd);
   console.log('  [CBC] Preset resp:', JSON.stringify(rx));
+  return rx;
+}
+
+// Comando AutorizarBico (&T<bico>$): libera o bico para abastecer por valor (sem limite fixo)
+// Equivale a C_FreePump do protocolo CBC — necessario apos o Preset
+async function cmdAutorizarBico(bicoDecimal) {
+  const bicoHex  = parseInt(bicoDecimal, 10).toString(16).toUpperCase().padStart(2, '0');
+  const conteudo = '&T' + bicoHex + '$';
+  const kk       = calcChecksum(conteudo);
+  const cmd      = '(' + conteudo + kk + ')';
+  console.log('  [CBC] AutorizarBico:', cmd, '→ bico', bicoHex);
+  const rx = await cbcCmd(cmd);
+  console.log('  [CBC] AutorizarBico resp:', JSON.stringify(rx));
   return rx;
 }
 
@@ -170,12 +182,16 @@ async function cmdIncrementar() {
 async function cmdStatus() {
   try {
     const rx = await cbcCmd('(&S)');
+    console.log('  [STS] raw (&S):', JSON.stringify(rx));
     const m = rx.match(/\(S(.+)\)/);
     if (!m) return [];
-    return [...m[1]].map((estado, i) => ({
+    // Remove firmware version: string termina antes do primeiro 'V' seguido de dígito
+    const payload = m[1].replace(/V\d.*$/, '');
+    const estadosValidos = new Set(['F','E','T','A','C','B','X','D']);
+    return [...payload].map((estado, i) => ({
       numero: String(i + 1).padStart(2, '0'),
       estado,
-    })).filter(b => b.estado !== 'F' && b.estado !== ' ');
+    })).filter(b => estadosValidos.has(b.estado) && b.estado !== 'F');
   } catch { return []; }
 }
 
@@ -227,14 +243,34 @@ const server = http.createServer(async (req, res) => {
       return json(res, { ok: true, bicos });
     }
 
-    // GET /visualizacao — valor em tempo real via (&V)
-    if (req.method === 'GET' && url === '/visualizacao') {
+    // GET /visualizacao?bico=09 — valor em tempo real via (&V)
+    // Se (&V) retornar vazio (simulador / free-run), faz peek no (&A) para detectar conclusão
+    if (req.method === 'GET' && url.startsWith('/visualizacao')) {
       try {
+        const bicoParam = new URL('http://x' + req.url).searchParams.get('bico');
+        const bicoAlvo  = bicoParam ? String(bicoParam).padStart(2, '0') : null;
+
         const abastecendo = await cmdVisualizacao();
-        if (abastecendo.length > 0) console.log('  [VIS] bicos ativos:', JSON.stringify(abastecendo));
-        return json(res, { ok: true, abastecendo });
+        if (abastecendo.length > 0) {
+          console.log('  [VIS] bicos ativos:', JSON.stringify(abastecendo));
+          return json(res, { ok: true, abastecendo, concluido: false });
+        }
+
+        // (&V) vazio: faz peek no (&A) sem consumir (sem (&I))
+        if (bicoAlvo) {
+          const candidato = await cmdAbastecimento();
+          if (!candidato.vazio) {
+            const bicoCandidato = String(candidato.bico ?? '').padStart(2, '0');
+            if (bicoCandidato === bicoAlvo) {
+              console.log('  [VIS] Concluído detectado via (&A) para bico', bicoAlvo);
+              return json(res, { ok: true, abastecendo: [], concluido: true });
+            }
+          }
+        }
+
+        return json(res, { ok: true, abastecendo: [], concluido: false });
       } catch {
-        return json(res, { ok: true, abastecendo: [] });
+        return json(res, { ok: true, abastecendo: [], concluido: false });
       }
     }
 
@@ -322,14 +358,40 @@ const server = http.createServer(async (req, res) => {
         iniciado_em:      new Date().toISOString(),
       });
 
-      // Envia Preset ao concentrador CBC para autorizar o bico
+      // Limpa registros antigos do bico no buffer (&A) antes de autorizar
+      try {
+        for (let i = 0; i < 20; i++) {
+          const old = await cmdAbastecimento();
+          if (old.vazio) break;
+          if (String(old.bico ?? '').padStart(2,'0') === String(bico).padStart(2,'0')) {
+            await cmdIncrementar();
+            console.log('  [A] registro antigo do bico', bico, 'descartado');
+          } else {
+            break; // registro de outro bico, para
+          }
+        }
+      } catch {}
+
+      // Hardware real: (&P) preset habilita rastreamento via (&V) em tempo real
+      // Se (&P) for rejeitado (ex: simulador), cai no (&T) free-run como fallback
       let presetOk = false;
       try {
         const valorCentavos = Math.round(parseFloat(valor) * 100);
-        await cmdPreset(bico, valorCentavos);
-        presetOk = true;
+        const presetResp = await cmdPreset(bico, valorCentavos);
+        const bicoHex = parseInt(bico, 10).toString(16).toUpperCase().padStart(2, '0');
+        const presetAceito = presetResp && !presetResp.includes('?') && presetResp.includes('P');
+        if (presetAceito) {
+          // Preset aceito pelo hardware real (resposta ex: "(P09)") — não envia (&T)
+          presetOk = true;
+          console.log('  [CBC] Preset aceito (hardware real):', presetResp.trim());
+        } else {
+          // Simulador ou fallback: usa (&T) free-run
+          await cmdAutorizarBico(bico);
+          presetOk = true;
+          console.log('  [CBC] Fallback para (&T) free-run');
+        }
       } catch (e) {
-        console.error('  [CBC] Preset falhou:', e.message);
+        console.error('  [CBC] Autorizar falhou:', e.message);
       }
 
       return json(res, { ok: true, cicloId, abastecimentoId: id, bico, valor, presetOk });
