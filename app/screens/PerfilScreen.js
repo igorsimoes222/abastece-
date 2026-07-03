@@ -86,7 +86,11 @@ export default function PerfilScreen({ navigation }) {
           <TouchableOpacity style={styles.avatarWrap} onPress={trocarFoto} activeOpacity={0.85}>
             <View style={styles.avatar}>
               {avatarUri
-                ? <Image source={{ uri: avatarUri }} style={styles.avatarImg} />
+                ? <Image
+                    source={{ uri: avatarUri }}
+                    style={styles.avatarImg}
+                    onError={() => { setAvatarUri(null); avatarService.remover(); }}
+                  />
                 : <Text style={styles.avatarText}>{iniciais}</Text>
               }
             </View>

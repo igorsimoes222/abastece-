@@ -300,7 +300,11 @@ export default function MapaScreen({ navigation }) {
           >
             <View style={styles.avatarCircle}>
               {avatarUri
-                ? <Image source={{ uri: avatarUri }} style={styles.avatarImg} />
+                ? <Image
+                    source={{ uri: avatarUri }}
+                    style={styles.avatarImg}
+                    onError={() => { setAvatarUri(null); avatarService.remover(); }}
+                  />
                 : <Text style={styles.avatarIniciais}>
                     {(usuario?.nome ?? 'U').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
                   </Text>
