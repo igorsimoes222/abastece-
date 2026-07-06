@@ -89,19 +89,33 @@ cbcConnect();
 
 // ─── Comandos CBC ─────────────────────────────────────────────────────────────
 
+// Mapa inverso: decimal do endereço CBC → numero físico do bico
+// Ex: parseInt('4D',16)=77 → '09'
+async function buildCbcMap() {
+  const rows = await knex('bicos').whereNotNull('numero_cbc').select('numero', 'numero_cbc');
+  const map = {};
+  for (const r of rows) {
+    const dec = parseInt(r.numero_cbc, 16);
+    map[dec] = String(r.numero).padStart(2, '0');
+  }
+  return map;
+}
+
 async function cmdVisualizacao() {
   const rx = await cbcCmd('(&V)');
   console.log('  [VIS] raw (&V):', JSON.stringify(rx));
   if (!rx || rx.trim() === '(0)' || rx.trim() === '') return [];
-  // Formato: (<bico2><valor6>...) — sem identificador V, grupos de 8 chars
   const m = rx.match(/\((.+)\)/);
   if (!m) return [];
   const d = m[1];
+  const cbcMap = await buildCbcMap();
   const bicos = [];
   for (let i = 0; i + 8 <= d.length; i += 8) {
     const bicoHex = d.substring(i, i + 2);
-    const bico    = parseInt(bicoHex, 16).toString().padStart(2, '0');
-    const cents   = parseInt(d.substring(i + 2, i + 8)) || 0;
+    const bicoDec = parseInt(bicoHex, 16);
+    // Usa mapeamento inverso se existir, senão converte direto
+    const bico = cbcMap[bicoDec] ?? String(bicoDec).padStart(2, '0');
+    const cents = parseInt(d.substring(i + 2, i + 8)) || 0;
     if (cents > 0) bicos.push({ bico, valor: (cents / 100).toFixed(2) });
   }
   return bicos;
@@ -166,7 +180,9 @@ async function cmdAbastecimento() {
   const casasVolume = (virgula >> 2) & 0x03;  // bits 2-3
   const casasPreco  = (virgula >> 4) & 0x03;  // bits 4-5
 
-  const bico = parseInt(bicoHex, 16).toString().padStart(2, '0');
+  const bicoDec = parseInt(bicoHex, 16);
+  const cbcMap  = await buildCbcMap();
+  const bico    = cbcMap[bicoDec] ?? String(bicoDec).padStart(2, '0');
   return {
     bico,
     valor:  (totalRaw  / Math.pow(10, casasTotal)).toFixed(casasTotal),
