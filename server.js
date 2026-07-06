@@ -1,9 +1,13 @@
 /**
  * Backend Abastece+ — Protocolo CBC (Companytec)
- * Conexao TCP persistente ao concentrador real no posto
  *
- * Para apontar para o concentrador real, defina:
- *   CBC_HOST=192.168.x.x node server.js
+ * Este arquivo é o "cérebro" da comunicação entre o app e as bombas de combustível.
+ * Ele faz duas coisas ao mesmo tempo:
+ *   1. Serve uma API HTTP (porta 3334) que o app consome
+ *   2. Mantém uma conexão TCP persistente com o concentrador CBC do posto (porta 2001)
+ *
+ * Para rodar apontando ao concentrador real do posto:
+ *   CBC_HOST=192.168.0.91 node server.js
  */
 
 const net  = require('net');
@@ -11,16 +15,20 @@ const http = require('http');
 const { knex, inicializarBanco } = require('./db');
 const { cadastrar, login, verificarToken } = require('./auth');
 
-const CBC_HOST    = process.env.CBC_HOST || '127.0.0.1';
+const CBC_HOST    = process.env.CBC_HOST || '127.0.0.1'; // IP do concentrador (env ou simulador local)
 const CBC_PORT    = parseInt(process.env.CBC_PORT || '2001');
 const SERVER_PORT = 3334;
 
-// ─── Conexao TCP persistente ao concentrador CBC ──────────────────────────────
+// ─── Conexão TCP persistente ao concentrador CBC ──────────────────────────────
+//
+// O concentrador CBC aceita apenas UMA conexão TCP por vez.
+// Por isso mantemos o socket aberto e enfileiramos os comandos — nunca abrimos
+// uma nova conexão por requisição.
 
-let cbcSocket    = null;
-let cbcConnected = false;
-let cmdQueue     = [];
-let processing   = false;
+let cbcSocket    = null;  // socket TCP ativo
+let cbcConnected = false; // flag de conexão
+let cmdQueue     = [];    // fila de comandos aguardando envio
+let processing   = false; // mutex: só um comando por vez
 
 function cbcConnect() {
   if (cbcConnected) return;
@@ -29,7 +37,7 @@ function cbcConnect() {
     cbcSocket    = sock;
     cbcConnected = true;
     console.log('  [CBC] Conectado em ' + CBC_HOST + ':' + CBC_PORT);
-    processQueue();
+    processQueue(); // inicia fila assim que conectar
   });
   sock.on('error', (e) => {
     cbcConnected = false;
@@ -45,6 +53,7 @@ function cbcConnect() {
   });
 }
 
+// Processa um comando da fila por vez (mutex simples)
 function processQueue() {
   if (processing || cmdQueue.length === 0 || !cbcConnected) return;
   processing = true;
@@ -52,6 +61,7 @@ function processQueue() {
   let buf = '';
   let timer;
 
+  // Acumula dados recebidos e aguarda 400ms de silêncio para considerar resposta completa
   const onData = (data) => {
     buf += data.toString('ascii');
     clearTimeout(timer);
@@ -62,9 +72,10 @@ function processQueue() {
     cbcSocket.removeListener('data', onData);
     processing = false;
     resolve(buf);
-    processQueue();
+    processQueue(); // processa próximo da fila
   };
 
+  // Timeout de 3s: se não chegar nada, resolve com o que tiver (ou rejeita)
   timer = setTimeout(() => {
     cbcSocket.removeListener('data', onData);
     processing = false;
@@ -74,9 +85,10 @@ function processQueue() {
   }, 3000);
 
   cbcSocket.on('data', onData);
-  cbcSocket.write(cmd);
+  cbcSocket.write(cmd); // envia o comando ao concentrador
 }
 
+// Enfileira um comando e retorna uma Promise com a resposta
 function cbcCmd(cmd) {
   return new Promise((resolve, reject) => {
     if (!cbcConnected) return reject(new Error('CBC nao conectado'));
@@ -85,22 +97,29 @@ function cbcCmd(cmd) {
   });
 }
 
-cbcConnect();
+cbcConnect(); // inicia conexão ao subir o servidor
 
 // ─── Comandos CBC ─────────────────────────────────────────────────────────────
 
-// Mapa inverso: decimal do endereço CBC → numero físico do bico
-// Ex: parseInt('4D',16)=77 → '09'
+// buildCbcMap: monta dicionário inverso para traduzir endereço lógico CBC → bico físico
+// Necessário porque o CBC identifica bicos pelo endereço hex (ex: 4D = 77 decimal)
+// mas o posto etiqueta fisicamente como "bico 09".
+// Exemplo: { 77: '09' } significa que o CBC endereço 4D (77) é o bico físico 09.
 async function buildCbcMap() {
   const rows = await knex('bicos').whereNotNull('numero_cbc').select('numero', 'numero_cbc');
   const map = {};
   for (const r of rows) {
-    const dec = parseInt(r.numero_cbc, 16);
-    map[dec] = String(r.numero).padStart(2, '0');
+    const dec = parseInt(r.numero_cbc, 16); // converte "4D" → 77
+    map[dec] = String(r.numero).padStart(2, '0'); // 77 → '09'
   }
   return map;
 }
 
+// cmdVisualizacao: lê valores em tempo real de todos os bicos abastecendo
+// Envia (&V) ao concentrador.
+// Resposta: grupos de 8 chars — <bico2hex><valor6decimal>
+// Exemplo: "(09001041)" = bico 09 (hex), R$10,41 (6 dígitos em centavos)
+// Exemplo: "(0400072909001041)" = dois bicos simultâneos (bico 04 e bico 09)
 async function cmdVisualizacao() {
   const rx = await cbcCmd('(&V)');
   console.log('  [VIS] raw (&V):', JSON.stringify(rx));
@@ -108,28 +127,38 @@ async function cmdVisualizacao() {
   const m = rx.match(/\((.+)\)/);
   if (!m) return [];
   const d = m[1];
-  const cbcMap = await buildCbcMap();
+  const cbcMap = await buildCbcMap(); // tradução endereço CBC → bico físico
   const bicos = [];
   for (let i = 0; i + 8 <= d.length; i += 8) {
-    const bicoHex = d.substring(i, i + 2);
-    const bicoDec = parseInt(bicoHex, 16);
-    // Usa mapeamento inverso se existir, senão converte direto
-    const bico = cbcMap[bicoDec] ?? String(bicoDec).padStart(2, '0');
-    const cents = parseInt(d.substring(i + 2, i + 8)) || 0;
-    if (cents > 0) bicos.push({ bico, valor: (cents / 100).toFixed(2) });
+    const bicoHex = d.substring(i, i + 2);           // ex: "4D" ou "09"
+    const bicoDec = parseInt(bicoHex, 16);            // ex: 77 ou 9
+    const bico    = cbcMap[bicoDec] ?? String(bicoDec).padStart(2, '0'); // traduz ou usa decimal
+    const cents   = parseInt(d.substring(i + 2, i + 8)) || 0; // ex: 001041 = 1041 centavos
+    if (cents > 0) bicos.push({ bico, valor: (cents / 100).toFixed(2) }); // ex: { bico: '09', valor: '10.41' }
   }
   return bicos;
 }
 
-// Calcula checksum CBC: soma ASCII dos chars apos '(' ate antes de KK, low byte em hex 2 chars
+// calcChecksum: calcula o KK do protocolo CBC
+// KK = soma dos valores ASCII de todos os chars do conteúdo, low byte, em hex maiúsculo 2 dígitos
+// Exemplo: "&P4D001000" → soma dos ASCII → & 38 + P 80 + 4 52 + D 68 + ... → mod 256 → "0F"
 function calcChecksum(conteudo) {
   let soma = 0;
   for (let i = 0; i < conteudo.length; i++) soma += conteudo.charCodeAt(i);
   return (soma & 0xFF).toString(16).toUpperCase().padStart(2, '0');
 }
 
-// Comando Preset (&P): define valor maximo para o bico (por dinheiro = '$')
-// bicoHex: endereço hex do bico no concentrador (ex: "4D"), já resolvido pelo chamador
+// cmdPreset: programa a bomba com um valor máximo em reais
+// Este é o comando principal — define quanto a bomba pode dispensar.
+// A bomba para automaticamente ao atingir o valor, sem intervenção do frentista.
+//
+// Formato do comando: (&P<BB><VVVVVV><KK>)
+//   BB     = endereço hex do bico no CBC (ex: "4D" para bico 09 neste posto)
+//   VVVVVV = valor em centavos, 6 dígitos (ex: "001000" = R$10,00)
+//   KK     = checksum
+//
+// Exemplo: (&P4D0010000F) → programa bico 4D com R$10,00
+// Resposta do concentrador: (P4D) = aceito | (P?t) = rejeitado
 async function cmdPreset(bicoHex, valorCentavos) {
   const bHex     = String(bicoHex).toUpperCase().padStart(2, '0');
   const valorStr = String(Math.round(valorCentavos)).padStart(6, '0');
@@ -142,8 +171,13 @@ async function cmdPreset(bicoHex, valorCentavos) {
   return rx;
 }
 
-// Comando AutorizarBico (&T<bico>$): libera o bico para abastecer por valor (sem limite fixo)
-// bicoHex: endereço hex já resolvido pelo chamador
+// cmdAutorizarBico: libera o bico sem limite de valor (free-run)
+// Usado como fallback quando o concentrador não suporta (&P) — ex: simulador.
+// No simulador, (&P) é rejeitado com "(P?t)", então cai aqui.
+//
+// Formato: (&T<BB>$<KK>)
+//   BB = endereço hex do bico
+//   $  = indica modo por valor (sem limite real — o CBC libera livremente)
 async function cmdAutorizarBico(bicoHex) {
   const bHex     = String(bicoHex).toUpperCase().padStart(2, '0');
   const conteudo = '&T' + bHex + '$';
@@ -155,8 +189,23 @@ async function cmdAutorizarBico(bicoHex) {
   return rx;
 }
 
-// Formato DT435 (&A): TTTTTTLLLLLLPPPPVVCCCCBBDDHHMMNNRRRREEEEEEEEEESKK (50 chars)
-// V = codigo de virgula (hex): bits 0-1=casas do total, bits 2-3=casas do volume, bits 4-5=casas do preco
+// cmdAbastecimento: lê o próximo registro de abastecimento finalizado da fila (&A)
+// O concentrador mantém uma fila FIFO de registros. (&A) lê sem consumir.
+// (&I) avança o ponteiro (consome o registro lido).
+//
+// Formato do registro DT435 (50 chars dentro dos parênteses):
+//   T[06] = total pago (centavos com casas decimais definidas por V)
+//   L[06] = volume abastecido
+//   P[04] = preço por litro
+//   V[02] = código de vírgula (hex) — define casas decimais de T, L e P
+//   C[04] = tempo de abastecimento (ignorado)
+//   B[02] = endereço hex do bico no CBC
+//   D[02] = dia, H[02] = hora, M[02] = minuto, N[02] = mês
+//
+// Exemplo: "(00500000821060903E002D45...)"
+//   005000 = 5000 → R$50,00 (2 casas pelo código V)
+//   008210 = 8210 → 8,210 litros
+//   6090   = 6090 → R$6,090/L
 async function cmdAbastecimento() {
   const rx = await cbcCmd('(&A)');
   console.log('  [CBC] (&A) raw:', JSON.stringify(rx));
@@ -165,24 +214,27 @@ async function cmdAbastecimento() {
   if (!m || m[1].length < 34) return { vazio: true };
   const d = m[1];
 
-  const totalRaw  = parseInt(d.substring(0,  6))  || 0;  // T[06] total a pagar
-  const volumeRaw = parseInt(d.substring(6,  12)) || 0;  // L[06] volume abastecido
-  const precoRaw  = parseInt(d.substring(12, 16)) || 0;  // P[04] preco unitario
-  const virgula   = parseInt(d.substring(16, 18), 16) || 0; // V[02] codigo de virgula (hex)
-  // C[04] = d[18:22] — tempo (ignorado aqui)
-  const bicoHex   = d.substring(22, 24);                 // B[02] codigo do bico (hex)
-  const dia       = d.substring(24, 26);                 // D[02]
-  const hora      = d.substring(26, 28);                 // H[02]
-  const minuto    = d.substring(28, 30);                 // M[02]
-  const mes       = d.substring(30, 32);                 // N[02]
+  const totalRaw  = parseInt(d.substring(0,  6))  || 0;  // T[06] total
+  const volumeRaw = parseInt(d.substring(6,  12)) || 0;  // L[06] volume
+  const precoRaw  = parseInt(d.substring(12, 16)) || 0;  // P[04] preço
+  const virgula   = parseInt(d.substring(16, 18), 16) || 0; // V[02] código de vírgula
+  // C[04] = d[18:22] — tempo (ignorado)
+  const bicoHex   = d.substring(22, 24);                 // B[02] endereço hex do bico
+  const dia       = d.substring(24, 26);
+  const hora      = d.substring(26, 28);
+  const minuto    = d.substring(28, 30);
+  const mes       = d.substring(30, 32);
 
-  const casasTotal  = (virgula >> 0) & 0x03;  // bits 0-1
-  const casasVolume = (virgula >> 2) & 0x03;  // bits 2-3
-  const casasPreco  = (virgula >> 4) & 0x03;  // bits 4-5
+  // Decodifica casas decimais a partir do código de vírgula
+  const casasTotal  = (virgula >> 0) & 0x03;  // bits 0-1 = casas do total
+  const casasVolume = (virgula >> 2) & 0x03;  // bits 2-3 = casas do volume
+  const casasPreco  = (virgula >> 4) & 0x03;  // bits 4-5 = casas do preço
 
+  // Traduz endereço CBC → bico físico usando o mapa inverso
   const bicoDec = parseInt(bicoHex, 16);
   const cbcMap  = await buildCbcMap();
   const bico    = cbcMap[bicoDec] ?? String(bicoDec).padStart(2, '0');
+
   return {
     bico,
     valor:  (totalRaw  / Math.pow(10, casasTotal)).toFixed(casasTotal),
@@ -192,18 +244,22 @@ async function cmdAbastecimento() {
   };
 }
 
+// cmdIncrementar: avança o ponteiro de leitura do buffer (&A)
+// Deve ser chamado após processar um registro para "consumi-lo" da fila.
 async function cmdIncrementar() {
   try { await cbcCmd('(&I)'); } catch {}
 }
 
+// cmdStatus: lê o estado atual de todos os bicos do concentrador
+// Resposta: (S<estados>) onde cada char representa um bico (F=livre, T=autorizando, A=abastecendo...)
+// O firmware do concentrador adiciona versão ao final (ex: "V3.7M1.0G78") — deve ser removida.
 async function cmdStatus() {
   try {
     const rx = await cbcCmd('(&S)');
     console.log('  [STS] raw (&S):', JSON.stringify(rx));
     const m = rx.match(/\(S(.+)\)/);
     if (!m) return [];
-    // Remove firmware version: string termina antes do primeiro 'V' seguido de dígito
-    const payload = m[1].replace(/V\d.*$/, '');
+    const payload = m[1].replace(/V\d.*$/, ''); // remove versão do firmware do final
     const estadosValidos = new Set(['F','E','T','A','C','B','X','D']);
     return [...payload].map((estado, i) => ({
       numero: String(i + 1).padStart(2, '0'),
@@ -249,19 +305,20 @@ const server = http.createServer(async (req, res) => {
   console.log('[' + new Date().toLocaleTimeString() + '] ' + req.method + ' ' + url);
 
   try {
-    // GET /ping
+    // GET /ping — verifica se backend e CBC estão online
     if (req.method === 'GET' && url === '/ping') {
       return json(res, { ok: true, cbc: CBC_HOST + ':' + CBC_PORT, conectado: cbcConnected });
     }
 
-    // GET /status
+    // GET /status — retorna bicos ativos no concentrador via (&S)
     if (req.method === 'GET' && url === '/status') {
       const bicos = await cmdStatus();
       return json(res, { ok: true, bicos });
     }
 
     // GET /visualizacao?bico=09 — valor em tempo real via (&V)
-    // Se (&V) retornar vazio (simulador / free-run), faz peek no (&A) para detectar conclusão
+    // Retorna { abastecendo: [{bico, valor}], concluido: bool }
+    // Se (&V) vazio mas (&A) tem registro do bico → concluido: true
     if (req.method === 'GET' && url.startsWith('/visualizacao')) {
       try {
         const bicoParam = new URL('http://x' + req.url).searchParams.get('bico');
@@ -273,7 +330,7 @@ const server = http.createServer(async (req, res) => {
           return json(res, { ok: true, abastecendo, concluido: false });
         }
 
-        // (&V) vazio: faz peek no (&A) sem consumir (sem (&I))
+        // (&V) vazio: faz peek no (&A) sem consumir para detectar conclusão
         if (bicoAlvo) {
           const candidato = await cmdAbastecimento();
           if (!candidato.vazio) {
@@ -291,7 +348,7 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    // GET /postos/:id — dados do posto com preços
+    // GET /postos/:id — dados do posto com preços dos combustíveis
     if (req.method === 'GET' && url.startsWith('/postos/')) {
       const id = parseInt(url.split('/')[2]) || 2;
       const posto = await knex('postos').where({ id }).first();
@@ -300,38 +357,35 @@ const server = http.createServer(async (req, res) => {
     }
 
     // GET /abastecimento?bico=09 — registro finalizado via (&A)
-    // Varre a fila CBC até encontrar o registro do bico solicitado.
-    // Registros de outros bicos são repostos na frente via (&I) sem consumir.
-    // Sem bico informado, retorna o primeiro da fila (comportamento legado).
+    // Varre a fila até encontrar o bico solicitado, consumindo com (&I).
+    // Registros de outros bicos são descartados (avança sem guardar).
     if (req.method === 'GET' && url.startsWith('/abastecimento')) {
       try {
         const bicoParam = new URL('http://x' + req.url).searchParams.get('bico');
         const bicoAlvo  = bicoParam ? String(bicoParam).padStart(2, '0') : null;
 
         let dados = null;
-        const MAX_TENTATIVAS = 20; // evita loop infinito
+        const MAX_TENTATIVAS = 20;
 
         for (let i = 0; i < MAX_TENTATIVAS; i++) {
           const candidato = await cmdAbastecimento();
-          if (candidato.vazio) break; // fila vazia
+          if (candidato.vazio) break;
 
           const bicoCandidato = String(candidato.bico ?? '').padStart(2, '0');
 
           if (!bicoAlvo || bicoCandidato === bicoAlvo) {
-            // Achou o registro certo — consome com (&I)
             dados = candidato;
-            await cmdIncrementar();
+            await cmdIncrementar(); // consome o registro da fila
             break;
           }
 
-          // Registro de outro bico — avança sem processar e continua buscando
           console.log('  [A] bico ' + bicoCandidato + ' ignorado (buscando ' + bicoAlvo + ')');
-          await cmdIncrementar();
+          await cmdIncrementar(); // descarta registro de outro bico e continua
         }
 
         if (!dados) return json(res, { ok: true, vazio: true });
 
-        // Atualiza o banco com os dados do abastecimento finalizado
+        // Salva resultado no banco de dados
         await knex('abastecimentos')
           .where({ status: 'aguardando', bico_numero: dados.bico })
           .orderBy('id', 'desc')
@@ -352,13 +406,18 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    // GET /historico
+    // GET /historico — lista últimos 50 abastecimentos
     if (req.method === 'GET' && url === '/historico') {
       const lista = await knex('abastecimentos').orderBy('created_at', 'desc').limit(50);
       return json(res, { ok: true, total: lista.length, itens: lista });
     }
 
-    // POST /autorizar — salva no banco e envia Preset (&P) ao concentrador
+    // POST /autorizar — ponto de entrada principal do fluxo de abastecimento
+    // 1. Salva abastecimento no banco com status 'aguardando'
+    // 2. Limpa registros antigos do bico no buffer (&A)
+    // 3. Resolve endereço CBC do bico (numero_cbc do banco ou conversão padrão)
+    // 4. Tenta (&P) preset — se aceito, bomba fica programada com valor máximo
+    //    Se rejeitado (simulador), usa (&T) free-run como fallback
     if (req.method === 'POST' && url === '/autorizar') {
       const body = await bodyJson(req);
       const { bico, valor, usuario_id, posto_id } = body;
@@ -375,7 +434,7 @@ const server = http.createServer(async (req, res) => {
         iniciado_em:      new Date().toISOString(),
       });
 
-      // Limpa registros antigos do bico no buffer (&A) antes de autorizar
+      // Limpa registros antigos do bico no buffer (&A) para não pegar dado de sessão anterior
       try {
         for (let i = 0; i < 20; i++) {
           const old = await cmdAbastecimento();
@@ -384,14 +443,13 @@ const server = http.createServer(async (req, res) => {
             await cmdIncrementar();
             console.log('  [A] registro antigo do bico', bico, 'descartado');
           } else {
-            break; // registro de outro bico, para
+            break;
           }
         }
       } catch {}
 
-      // Hardware real: (&P) preset habilita rastreamento via (&V) em tempo real
-      // Se (&P) for rejeitado (ex: simulador), cai no (&T) free-run como fallback
-      // numero_cbc: endereço lógico do bico no concentrador (pode diferir do número físico)
+      // Resolve endereço CBC: usa numero_cbc do banco se cadastrado, senão converte decimal→hex
+      // Exemplo: bico "09" com numero_cbc="4D" → usa "4D" nos comandos CBC
       const bicoDB = await knex('bicos').where({ numero: String(bico).padStart(2, '0') }).first();
       const bicoHexCbc = bicoDB?.numero_cbc
         ? String(bicoDB.numero_cbc).toUpperCase().padStart(2, '0')
@@ -401,15 +459,13 @@ const server = http.createServer(async (req, res) => {
       let presetOk = false;
       try {
         const valorCentavos = Math.round(parseFloat(valor) * 100);
-        const presetResp = await cmdPreset(bicoHexCbc, valorCentavos, true);
-        const bicoHex = bicoHexCbc;
+        const presetResp = await cmdPreset(bicoHexCbc, valorCentavos);
         const presetAceito = presetResp && !presetResp.includes('?') && presetResp.includes('P');
         if (presetAceito) {
-          // Preset aceito pelo hardware real (resposta ex: "(P09)") — não envia (&T)
           presetOk = true;
           console.log('  [CBC] Preset aceito (hardware real):', presetResp.trim());
         } else {
-          // Simulador ou fallback: usa (&T) free-run
+          // Fallback para simulador ou concentradores que não suportam (&P)
           await cmdAutorizarBico(bicoHexCbc);
           presetOk = true;
           console.log('  [CBC] Fallback para (&T) free-run');
@@ -421,7 +477,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, { ok: true, cicloId, abastecimentoId: id, bico, valor, presetOk });
     }
 
-    // POST /incrementar — avanca ponteiro (&I)
+    // POST /incrementar — avança ponteiro (&I) manualmente (uso administrativo)
     if (req.method === 'POST' && url === '/incrementar') {
       await cmdIncrementar();
       return json(res, { ok: true });
@@ -478,6 +534,8 @@ const server = http.createServer(async (req, res) => {
 
     // ── BICOS ─────────────────────────────────────────────────────────────────
 
+    // POST /bico/validar — valida o código do adesivo colado na bomba
+    // O cliente digita o número do bico + código do adesivo no app
     if (req.method === 'POST' && url === '/bico/validar') {
       const body = await bodyJson(req);
       const numero = String(body.numero ?? '').trim().padStart(2, '0');
@@ -488,11 +546,13 @@ const server = http.createServer(async (req, res) => {
       return json(res, { ok: true, bico: { numero: bico.numero, combustivel: bico.combustivel } });
     }
 
+    // GET /admin/bicos — lista todos os bicos cadastrados
     if (req.method === 'GET' && url === '/admin/bicos') {
       const lista = await knex('bicos').orderBy('numero');
       return json(res, { ok: true, total: lista.length, bicos: lista });
     }
 
+    // POST /admin/bicos — cadastra ou atualiza um bico
     if (req.method === 'POST' && url === '/admin/bicos') {
       const body = await bodyJson(req);
       const numero = String(body.numero ?? '').padStart(2, '0');
