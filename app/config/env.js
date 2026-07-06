@@ -1,5 +1,5 @@
 // DEV local: aponta para o backend rodando no notebook
-export const API_URL = 'http://192.168.0.110:3334';
+export const API_URL = 'http://192.168.0.108:3334';
 
 // PROD (quando subir para nuvem):
 // export const API_URL = 'https://api.abasteceplus.com.br/v1';
