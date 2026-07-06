@@ -115,23 +115,24 @@ function calcChecksum(conteudo) {
 }
 
 // Comando Preset (&P): define valor maximo para o bico (por dinheiro = '$')
-async function cmdPreset(bicoDecimal, valorCentavos) {
-  const bicoHex  = parseInt(bicoDecimal, 10).toString(16).toUpperCase().padStart(2, '0');
+// bicoHex: endereço hex do bico no concentrador (ex: "4D"), já resolvido pelo chamador
+async function cmdPreset(bicoHex, valorCentavos) {
+  const bHex     = String(bicoHex).toUpperCase().padStart(2, '0');
   const valorStr = String(Math.round(valorCentavos)).padStart(6, '0');
-  const conteudo = '&P' + bicoHex + valorStr;
+  const conteudo = '&P' + bHex + valorStr;
   const kk       = calcChecksum(conteudo);
   const cmd      = '(' + conteudo + kk + ')';
-  console.log('  [CBC] Preset:', cmd, '→ bico', bicoHex, 'valor', valorCentavos, 'cts');
+  console.log('  [CBC] Preset:', cmd, '→ bico', bHex, 'valor', valorCentavos, 'cts');
   const rx = await cbcCmd(cmd);
   console.log('  [CBC] Preset resp:', JSON.stringify(rx));
   return rx;
 }
 
 // Comando AutorizarBico (&T<bico>$): libera o bico para abastecer por valor (sem limite fixo)
-// Equivale a C_FreePump do protocolo CBC — necessario apos o Preset
-async function cmdAutorizarBico(bicoDecimal) {
-  const bicoHex  = parseInt(bicoDecimal, 10).toString(16).toUpperCase().padStart(2, '0');
-  const conteudo = '&T' + bicoHex + '$';
+// bicoHex: endereço hex já resolvido pelo chamador
+async function cmdAutorizarBico(bicoHex) {
+  const bHex     = String(bicoHex).toUpperCase().padStart(2, '0');
+  const conteudo = '&T' + bHex + '$';
   const kk       = calcChecksum(conteudo);
   const cmd      = '(' + conteudo + kk + ')';
   console.log('  [CBC] AutorizarBico:', cmd, '→ bico', bicoHex);
@@ -374,11 +375,18 @@ const server = http.createServer(async (req, res) => {
 
       // Hardware real: (&P) preset habilita rastreamento via (&V) em tempo real
       // Se (&P) for rejeitado (ex: simulador), cai no (&T) free-run como fallback
+      // numero_cbc: endereço lógico do bico no concentrador (pode diferir do número físico)
+      const bicoDB = await knex('bicos').where({ numero: String(bico).padStart(2, '0') }).first();
+      const bicoHexCbc = bicoDB?.numero_cbc
+        ? String(bicoDB.numero_cbc).toUpperCase().padStart(2, '0')
+        : parseInt(bico, 10).toString(16).toUpperCase().padStart(2, '0');
+      console.log('  [CBC] Bico', bico, '→ endereço CBC:', bicoHexCbc, bicoDB?.numero_cbc ? '(numero_cbc do banco)' : '(conversão padrão)');
+
       let presetOk = false;
       try {
         const valorCentavos = Math.round(parseFloat(valor) * 100);
-        const presetResp = await cmdPreset(bico, valorCentavos);
-        const bicoHex = parseInt(bico, 10).toString(16).toUpperCase().padStart(2, '0');
+        const presetResp = await cmdPreset(bicoHexCbc, valorCentavos, true);
+        const bicoHex = bicoHexCbc;
         const presetAceito = presetResp && !presetResp.includes('?') && presetResp.includes('P');
         if (presetAceito) {
           // Preset aceito pelo hardware real (resposta ex: "(P09)") — não envia (&T)
@@ -386,7 +394,7 @@ const server = http.createServer(async (req, res) => {
           console.log('  [CBC] Preset aceito (hardware real):', presetResp.trim());
         } else {
           // Simulador ou fallback: usa (&T) free-run
-          await cmdAutorizarBico(bico);
+          await cmdAutorizarBico(bicoHexCbc);
           presetOk = true;
           console.log('  [CBC] Fallback para (&T) free-run');
         }

@@ -80,6 +80,12 @@ async function inicializarBanco() {
       if (!temCodigo) {
         await knex.schema.table('bicos', t => t.string('codigo_adesivo', 20));
       }
+      // numero_cbc: endereço lógico do bico no concentrador (hex, ex: "4D")
+      // Se nulo, usa conversão padrão decimal→hex do numero do bico
+      const temCbc = await knex.schema.hasColumn('bicos', 'numero_cbc');
+      if (!temCbc) {
+        await knex.schema.table('bicos', t => t.string('numero_cbc', 4));
+      }
     }
   });
 
