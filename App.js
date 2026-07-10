@@ -23,6 +23,7 @@ import PreAutorizacaoScreen from './app/screens/PreAutorizacaoScreen';
 import PagoDiretoPostoScreen from './app/screens/PagoDiretoPostoScreen';
 import DadosPessoaisScreen from './app/screens/DadosPessoaisScreen';
 import SegurancaScreen from './app/screens/SegurancaScreen';
+import NotificacoesScreen from './app/screens/NotificacoesScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -80,6 +81,7 @@ export default function App() {
         <Stack.Screen name="PagoDiretoPosto" component={PagoDiretoPostoScreen} />
         <Stack.Screen name="DadosPessoais" component={DadosPessoaisScreen} />
         <Stack.Screen name="Seguranca" component={SegurancaScreen} />
+        <Stack.Screen name="Notificacoes" component={NotificacoesScreen} />
       </Stack.Navigator>
     </NavigationContainer>
     </AuthProvider>

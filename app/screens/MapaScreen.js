@@ -317,7 +317,7 @@ export default function MapaScreen({ navigation }) {
             </View>
           </TouchableOpacity>
           <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.iconBtn}>
+            <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Notificacoes')}>
               <Text style={styles.iconBtnText}>🔔</Text>
               <View style={styles.notifDot} />
             </TouchableOpacity>
