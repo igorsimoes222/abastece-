@@ -6,6 +6,15 @@ import { colors, radius, spacing } from '../../components/theme';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import { api } from '../services/api';
 
+function metodoPagamentoIcon(metodo) {
+  if (!metodo) return '';
+  const m = metodo.toLowerCase();
+  if (m.includes('pix')) return '🔑';
+  if (m.includes('débito') || m.includes('debito')) return '🏦';
+  if (m.includes('dinheiro') || m.includes('posto')) return '💵';
+  return '💳';
+}
+
 function formatarData(iso) {
   if (!iso) return '';
   const d = new Date(iso);
@@ -32,10 +41,15 @@ export default function HistoricoScreen({ navigation }) {
       .finally(() => setCarregando(false));
   }, []);
 
-  const filtered = itens.filter(h =>
-    `bico ${h.bico_numero}`.toLowerCase().includes(busca.toLowerCase()) ||
-    (h.status ?? '').toLowerCase().includes(busca.toLowerCase())
-  );
+  const filtered = itens.filter(h => {
+    const q = busca.toLowerCase();
+    return (
+      `bico ${h.bico_numero}`.toLowerCase().includes(q) ||
+      (h.status ?? '').toLowerCase().includes(q) ||
+      (h.placa ?? '').toLowerCase().includes(q) ||
+      (h.metodo_pagamento ?? '').toLowerCase().includes(q)
+    );
+  });
 
   const totalGasto = itens.reduce((s, h) => s + parseFloat(h.valor_cobrado || 0), 0);
   const totalCashback = itens.reduce((s, h) => s + parseFloat(h.cashback_gerado || 0), 0);
@@ -123,6 +137,16 @@ export default function HistoricoScreen({ navigation }) {
                         {item.status === 'concluido' ? 'Concluído' : item.status}
                       </Text>
                     </Text>
+                    <View style={styles.histMetaRow}>
+                      {item.metodo_pagamento && (
+                        <Text style={styles.histMetodo}>
+                          {metodoPagamentoIcon(item.metodo_pagamento)} {item.metodo_pagamento}
+                        </Text>
+                      )}
+                      {item.placa && (
+                        <Text style={styles.histPlaca}>🚗 {item.placa}</Text>
+                      )}
+                    </View>
                   </View>
                   <View style={styles.histRight}>
                     <Text style={styles.histValor}>
@@ -150,7 +174,7 @@ export default function HistoricoScreen({ navigation }) {
       <View style={styles.bottomNav}>
         {[
           { icon: '🗺️', label: 'Mapa', screen: 'Mapa' },
-          { icon: '⛽', label: 'Abastecer', screen: 'Autorizacao' },
+          { icon: '⛽', label: 'Abastecer', screen: 'NFC' },
           { icon: '👛', label: 'Carteira', screen: 'Carteira' },
           { icon: '🕐', label: 'Histórico', screen: 'Historico', active: true },
           { icon: '👤', label: 'Perfil', screen: 'Perfil' },
@@ -221,6 +245,9 @@ const styles = StyleSheet.create({
   histValor: { fontSize: 15, fontWeight: '900', color: colors.text },
   histLitros: { fontSize: 11, color: colors.textSec },
   histCashback: { fontSize: 11, color: colors.laranja, fontWeight: '700' },
+  histMetaRow: { flexDirection: 'row', gap: 8, marginTop: 3, flexWrap: 'wrap' },
+  histMetodo: { fontSize: 10, color: colors.textMuted },
+  histPlaca: { fontSize: 10, color: colors.textMuted },
 
   vazio: { alignItems: 'center', paddingVertical: 60, gap: 8 },
   vazioIcon: { fontSize: 48 },

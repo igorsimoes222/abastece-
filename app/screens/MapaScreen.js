@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   ActivityIndicator, Image, Modal, ScrollView, FlatList, Dimensions,
@@ -14,66 +14,66 @@ import { useAuth } from '../context/AuthContext';
 const { width } = Dimensions.get('window');
 
 const SETE_ESTRELAS = [
-  { id:'sete_estrelas_001', nome:'Sete Estrelas', cidade:'Aparecida do Norte', uf:'SP', endereco:'Av. Padroeira do Brasil, 444', bairro:'São Roque', lat:-22.8244302, lng:-45.207314 },
-  { id:'sete_estrelas_002', nome:'Sete Estrelas', cidade:'Bragança Paulista', uf:'SP', endereco:'Av. José Gomes da Rocha Leal, 914', bairro:'Centro', lat:-22.9510211, lng:-46.5451175 },
-  { id:'sete_estrelas_003', nome:'Sete Estrelas', cidade:'Caçapava', uf:'SP', endereco:'Rua Prof. João Batista Ortiz Monteiro, 613', bairro:'', lat:-23.110574, lng:-45.7113064 },
-  { id:'sete_estrelas_004', nome:'Sete Estrelas', cidade:'Caçapava', uf:'SP', endereco:'Av. Brasil, 480', bairro:'', lat:-23.1015171, lng:-45.710628 },
-  { id:'sete_estrelas_006', nome:'Sete Estrelas', cidade:'Caçapava', uf:'SP', endereco:'Rua Marques de Herval, 400', bairro:'Centro', lat:-23.1022045, lng:-45.708169 },
-  { id:'sete_estrelas_007', nome:'Sete Estrelas', cidade:'Campos do Jordão', uf:'SP', endereco:'Av. Frei Orestes Girardi, 2305', bairro:'Vila Jaguaribe', lat:-22.7330805, lng:-45.5849028 },
-  { id:'sete_estrelas_009', nome:'Sete Estrelas', cidade:'Campos do Jordão', uf:'SP', endereco:'Av. Dr. Januário Miraglia, 3300', bairro:'Evereste', lat:-22.7341646, lng:-45.5859514 },
+  { id:'sete_estrelas_001', nome:'Sete Estrelas', cidade:'Aparecida do Norte', uf:'SP', endereco:'Av. Padroeira do Brasil, 444', bairro:'SÃ£o Roque', lat:-22.8244302, lng:-45.207314 },
+  { id:'sete_estrelas_002', nome:'Sete Estrelas', cidade:'BraganÃ§a Paulista', uf:'SP', endereco:'Av. JosÃ© Gomes da Rocha Leal, 914', bairro:'Centro', lat:-22.9510211, lng:-46.5451175 },
+  { id:'sete_estrelas_003', nome:'Sete Estrelas', cidade:'CaÃ§apava', uf:'SP', endereco:'Rua Prof. JoÃ£o Batista Ortiz Monteiro, 613', bairro:'', lat:-23.110574, lng:-45.7113064 },
+  { id:'sete_estrelas_004', nome:'Sete Estrelas', cidade:'CaÃ§apava', uf:'SP', endereco:'Av. Brasil, 480', bairro:'', lat:-23.1015171, lng:-45.710628 },
+  { id:'sete_estrelas_006', nome:'Sete Estrelas', cidade:'CaÃ§apava', uf:'SP', endereco:'Rua Marques de Herval, 400', bairro:'Centro', lat:-23.1022045, lng:-45.708169 },
+  { id:'sete_estrelas_007', nome:'Sete Estrelas', cidade:'Campos do JordÃ£o', uf:'SP', endereco:'Av. Frei Orestes Girardi, 2305', bairro:'Vila Jaguaribe', lat:-22.7330805, lng:-45.5849028 },
+  { id:'sete_estrelas_009', nome:'Sete Estrelas', cidade:'Campos do JordÃ£o', uf:'SP', endereco:'Av. Dr. JanuÃ¡rio Miraglia, 3300', bairro:'Evereste', lat:-22.7341646, lng:-45.5859514 },
   { id:'sete_estrelas_010', nome:'Sete Estrelas', cidade:'Contagem', uf:'MG', endereco:'Avenida Londres, 700', bairro:'Bairro Cinco', lat:-19.9405603, lng:-44.0588357 },
-  { id:'sete_estrelas_011', nome:'Sete Estrelas', cidade:'Cruzeiro', uf:'SP', endereco:'Av. Rotary Club, 768', bairro:'Jardim América', lat:-22.5918897, lng:-44.9636571 },
+  { id:'sete_estrelas_011', nome:'Sete Estrelas', cidade:'Cruzeiro', uf:'SP', endereco:'Av. Rotary Club, 768', bairro:'Jardim AmÃ©rica', lat:-22.5918897, lng:-44.9636571 },
   { id:'sete_estrelas_012', nome:'Sete Estrelas', cidade:'Cruzeiro', uf:'SP', endereco:'Rua Dr. Celestino, 1307', bairro:'Vila Canevari', lat:-22.5739527, lng:-44.9613529 },
   { id:'sete_estrelas_013', nome:'Sete Estrelas', cidade:'Cruzeiro', uf:'SP', endereco:'Rua Eng. Antonio Penido', bairro:'', lat:-22.5789135, lng:-44.9583337 },
-  { id:'sete_estrelas_015', nome:'Sete Estrelas', cidade:'Cruzeiro', uf:'SP', endereco:'Rua Antonio José da Cruz, 923', bairro:'Vila Washinton Beleza', lat:-22.5793003, lng:-44.9698205 },
-  { id:'sete_estrelas_018', nome:'Sete Estrelas', cidade:'Itajubá', uf:'MG', endereco:'Av. Presidente Tancredo de Almeida Neves, 336', bairro:'São Judas Tadeu', lat:-22.422945, lng:-45.4697715 },
-  { id:'sete_estrelas_019', nome:'Sete Estrelas', cidade:'Itajubá', uf:'MG', endereco:'Av. Presidente Tancredo de Almeida Neves, 845', bairro:'São Judas Tadeu', lat:-22.4236209, lng:-45.4690341 },
+  { id:'sete_estrelas_015', nome:'Sete Estrelas', cidade:'Cruzeiro', uf:'SP', endereco:'Rua Antonio JosÃ© da Cruz, 923', bairro:'Vila Washinton Beleza', lat:-22.5793003, lng:-44.9698205 },
+  { id:'sete_estrelas_018', nome:'Sete Estrelas', cidade:'ItajubÃ¡', uf:'MG', endereco:'Av. Presidente Tancredo de Almeida Neves, 336', bairro:'SÃ£o Judas Tadeu', lat:-22.422945, lng:-45.4697715 },
+  { id:'sete_estrelas_019', nome:'Sete Estrelas', cidade:'ItajubÃ¡', uf:'MG', endereco:'Av. Presidente Tancredo de Almeida Neves, 845', bairro:'SÃ£o Judas Tadeu', lat:-22.4236209, lng:-45.4690341 },
   { id:'sete_estrelas_020', nome:'Sete Estrelas', cidade:'Lorena', uf:'SP', endereco:'Av. Targino Vilela Nunes, 789', bairro:'Vila Nunes', lat:-22.7237957, lng:-45.1090584 },
-  { id:'sete_estrelas_021', nome:'Sete Estrelas', cidade:'Jacareí', uf:'SP', endereco:'Rua das Begônias, 13', bairro:'Jardim Primavera', lat:-23.2860746, lng:-45.950157 },
-  { id:'sete_estrelas_022', nome:'Sete Estrelas', cidade:'Jacareí', uf:'SP', endereco:'Av. São João, 173', bairro:'São João', lat:-23.3093377, lng:-45.9800756 },
-  { id:'sete_estrelas_025', nome:'Sete Estrelas', cidade:'Jacareí', uf:'SP', endereco:'Rua Barão de Jacareí, 300', bairro:'Centro', lat:-23.3021097, lng:-45.9596929 },
-  { id:'sete_estrelas_027', nome:'Sete Estrelas', cidade:'Jacareí', uf:'SP', endereco:'Av. Presidente Getúlio Vargas, 2700', bairro:'Córrego Seco', lat:-23.2693753, lng:-45.9505608 },
-  { id:'sete_estrelas_028', nome:'Sete Estrelas', cidade:'Jacareí', uf:'SP', endereco:'Av. Malek Assad, 690', bairro:'Jardim Santa Maria', lat:-23.2888161, lng:-45.9690109 },
-  { id:'sete_estrelas_032', nome:'Sete Estrelas', cidade:'Mogi das Cruzes', uf:'SP', endereco:'Rua Gonçalo Ferreira, 233', bairro:'Jardim Ponte Grande', lat:-23.5108054, lng:-46.2071005 },
+  { id:'sete_estrelas_021', nome:'Sete Estrelas', cidade:'JacareÃ­', uf:'SP', endereco:'Rua das BegÃ´nias, 13', bairro:'Jardim Primavera', lat:-23.2860746, lng:-45.950157 },
+  { id:'sete_estrelas_022', nome:'Sete Estrelas', cidade:'JacareÃ­', uf:'SP', endereco:'Av. SÃ£o JoÃ£o, 173', bairro:'SÃ£o JoÃ£o', lat:-23.3093377, lng:-45.9800756 },
+  { id:'sete_estrelas_025', nome:'Sete Estrelas', cidade:'JacareÃ­', uf:'SP', endereco:'Rua BarÃ£o de JacareÃ­, 300', bairro:'Centro', lat:-23.3021097, lng:-45.9596929 },
+  { id:'sete_estrelas_027', nome:'Sete Estrelas', cidade:'JacareÃ­', uf:'SP', endereco:'Av. Presidente GetÃºlio Vargas, 2700', bairro:'CÃ³rrego Seco', lat:-23.2693753, lng:-45.9505608 },
+  { id:'sete_estrelas_028', nome:'Sete Estrelas', cidade:'JacareÃ­', uf:'SP', endereco:'Av. Malek Assad, 690', bairro:'Jardim Santa Maria', lat:-23.2888161, lng:-45.9690109 },
+  { id:'sete_estrelas_032', nome:'Sete Estrelas', cidade:'Mogi das Cruzes', uf:'SP', endereco:'Rua GonÃ§alo Ferreira, 233', bairro:'Jardim Ponte Grande', lat:-23.5108054, lng:-46.2071005 },
   { id:'sete_estrelas_033', nome:'Sete Estrelas', cidade:'Monteiro Lobato', uf:'SP', endereco:'Largo Comendador Freire, 30', bairro:'Centro', lat:-22.9545166, lng:-45.8383007 },
   { id:'sete_estrelas_035', nome:'Sete Estrelas', cidade:'Pindamonhangaba', uf:'SP', endereco:'Av. Nossa Senhora do Bom Sucesso, 1600', bairro:'Altos do Cardoso', lat:-22.934981, lng:-45.4620952 },
-  { id:'sete_estrelas_036', nome:'Sete Estrelas', cidade:'Pindamonhangaba', uf:'SP', endereco:'Rua das Andorinhas, 50', bairro:'Triângulo', lat:-22.943134, lng:-45.4187515 },
+  { id:'sete_estrelas_036', nome:'Sete Estrelas', cidade:'Pindamonhangaba', uf:'SP', endereco:'Rua das Andorinhas, 50', bairro:'TriÃ¢ngulo', lat:-22.943134, lng:-45.4187515 },
   { id:'sete_estrelas_038', nome:'Sete Estrelas', cidade:'Pindamonhangaba', uf:'SP', endereco:'Av. Dr. Francisco Lessa Junior, 776', bairro:'Socorro', lat:-22.926885, lng:-45.4753657 },
-  { id:'sete_estrelas_040', nome:'Sete Estrelas', cidade:'Pindamonhangaba', uf:'SP', endereco:'Rodovia SP-62, 5000', bairro:'Água Preta', lat:-22.9203206, lng:-45.3410449 },
-  { id:'sete_estrelas_041', nome:'Sete Estrelas', cidade:'Pindamonhangaba', uf:'SP', endereco:'Av. Doutor Francisco Lessa Jr, 1205', bairro:'Chácara Galega', lat:-22.9288036, lng:-45.4634504 },
-  { id:'sete_estrelas_042', nome:'Sete Estrelas', cidade:'Piracicaba', uf:'SP', endereco:'Av. Abel Francisco Pereira, 131', bairro:'Jaraguá', lat:-22.7368534, lng:-47.6678709 },
-  { id:'sete_estrelas_043', nome:'Sete Estrelas', cidade:'Praia Grande', uf:'SP', endereco:'Avenida Presidente Kennedy, 17911', bairro:'Balneário Flórida', lat:-24.0748567, lng:-46.5833303 },
+  { id:'sete_estrelas_040', nome:'Sete Estrelas', cidade:'Pindamonhangaba', uf:'SP', endereco:'Rodovia SP-62, 5000', bairro:'Ãgua Preta', lat:-22.9203206, lng:-45.3410449 },
+  { id:'sete_estrelas_041', nome:'Sete Estrelas', cidade:'Pindamonhangaba', uf:'SP', endereco:'Av. Doutor Francisco Lessa Jr, 1205', bairro:'ChÃ¡cara Galega', lat:-22.9288036, lng:-45.4634504 },
+  { id:'sete_estrelas_042', nome:'Sete Estrelas', cidade:'Piracicaba', uf:'SP', endereco:'Av. Abel Francisco Pereira, 131', bairro:'JaraguÃ¡', lat:-22.7368534, lng:-47.6678709 },
+  { id:'sete_estrelas_043', nome:'Sete Estrelas', cidade:'Praia Grande', uf:'SP', endereco:'Avenida Presidente Kennedy, 17911', bairro:'BalneÃ¡rio FlÃ³rida', lat:-24.0748567, lng:-46.5833303 },
   { id:'sete_estrelas_044', nome:'Sete Estrelas', cidade:'Praia Grande', uf:'SP', endereco:'Avenida Dr. Roberto de Almeida Vinhas, 5723', bairro:'Vila Tupi', lat:-24.0009365, lng:-46.4162974 },
-  { id:'sete_estrelas_046', nome:'Sete Estrelas', cidade:'Sapucaí Mirim', uf:'MG', endereco:'Avenida Presidente Vargas, 147', bairro:'Centro', lat:-22.7452964, lng:-45.7413841 },
-  { id:'sete_estrelas_047', nome:'Sete Estrelas', cidade:'Sapucaí Mirim', uf:'MG', endereco:'Rod. MG 173 - KM 67', bairro:'Ponte Nova', lat:-22.7480012, lng:-45.7427651 },
-  { id:'sete_estrelas_048', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Av. Perseu, 752', bairro:'Jardim Satélite', lat:-23.2274965, lng:-45.8905572 },
-  { id:'sete_estrelas_049', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Rua Ceci, 215', bairro:'Jardim Paulista', lat:-23.1911123, lng:-45.8712171 },
-  { id:'sete_estrelas_050', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Rua Penedo, 1051', bairro:'Jardim Petrópolis', lat:-23.2409417, lng:-45.9145075 },
-  { id:'sete_estrelas_053', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Av. Perseu, 31', bairro:'Jardim Satélite', lat:-23.2226371, lng:-45.8890273 },
-  { id:'sete_estrelas_054', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Av. Senador Teotônio Vilela, 2001', bairro:'Vila Bethânia', lat:-23.1963129, lng:-45.884706 },
-  { id:'sete_estrelas_055', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Rua José de Campos, 66', bairro:'Cidade Morumbi', lat:-23.2593429, lng:-45.9053843 },
-  { id:'sete_estrelas_056', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Rua Paraibuna, 1340', bairro:'Vila Sanches', lat:-23.1955974, lng:-45.8878374 },
-  { id:'sete_estrelas_058', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Av. João Batista de Souza Soares, 2969', bairro:'Jardim Morumbi', lat:-23.2540395, lng:-45.9093949 },
-  { id:'sete_estrelas_059', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Av. Jorge Zarur, 1800', bairro:'Vila Betânia', lat:-23.2061548, lng:-45.9051189 },
-  { id:'sete_estrelas_060', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Av. Dr. João Batista de Souza Soares, 3423', bairro:'Jardim Morumbi', lat:-23.2499962, lng:-45.908427 },
-  { id:'sete_estrelas_061', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Rua São Jorge, 21', bairro:'Santana', lat:-23.1613321, lng:-45.8991287 },
-  { id:'sete_estrelas_063', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Av. Presidente Tancredo Neves, 1201', bairro:'Jd. Residencial Ana Maria', lat:-23.1896707, lng:-45.7887515 },
-  { id:'sete_estrelas_064', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Rua Benedito Julião Machado, 49', bairro:'Vila Tupi', lat:-23.1748754, lng:-45.8768736 },
-  { id:'sete_estrelas_065', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Av. Cassiano Ricardo, 1680', bairro:'Jardim Alvorada', lat:-23.2271922, lng:-45.9124884 },
-  { id:'sete_estrelas_067', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Av. Feira de Santana, 10', bairro:'Jardim Vale do Sol', lat:-23.2562033, lng:-45.912114 },
-  { id:'sete_estrelas_068', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Av. São João, 154', bairro:'Jardim América', lat:-23.2108335, lng:-45.9091762 },
-  { id:'sete_estrelas_070', nome:'Sete Estrelas', cidade:'São José dos Campos', uf:'SP', endereco:'Av. Presidente Tancredo Neves, 1030', bairro:'Jardim Três José', lat:-23.1840061, lng:-45.8024648 },
-  { id:'sete_estrelas_072', nome:'Sete Estrelas', cidade:'Taubaté', uf:'SP', endereco:'Av. Dr. Félix Guisard Filho, 355', bairro:'Belém', lat:-23.0421835, lng:-45.5576301 },
-  { id:'sete_estrelas_073', nome:'Sete Estrelas', cidade:'Taubaté', uf:'SP', endereco:'Av. Charles Schneider, 1775', bairro:'Vila Progresso', lat:-23.0238988, lng:-45.5891265 },
-  { id:'sete_estrelas_074', nome:'Sete Estrelas', cidade:'Taubaté', uf:'SP', endereco:'Av. José Olegário de Barros, 1462', bairro:'Areão', lat:-23.0150712, lng:-45.5561758 },
-  { id:'sete_estrelas_075', nome:'Sete Estrelas', cidade:'Taubaté', uf:'SP', endereco:'Av. dos Bandeirantes, 5236', bairro:'Independência', lat:-23.0310615, lng:-45.5488828 },
-  { id:'sete_estrelas_077', nome:'Sete Estrelas', cidade:'Taubaté', uf:'SP', endereco:'Rua Padre Fischer, 1487', bairro:'Vila São Geraldo', lat:-23.0005235, lng:-45.5537607 },
-  { id:'sete_estrelas_078', nome:'Sete Estrelas', cidade:'Taubaté', uf:'SP', endereco:'Av. Dom Pedro I, 5391', bairro:'Independência', lat:-23.0574063, lng:-45.6152253 },
-  { id:'sete_estrelas_080', nome:'Sete Estrelas', cidade:'Taubaté', uf:'SP', endereco:'Av. Dom Duarte Leopoldo e Silva, 501', bairro:'Vila São José', lat:-23.0103679, lng:-45.5386995 },
-  { id:'sete_estrelas_081', nome:'Sete Estrelas', cidade:'Taubaté', uf:'SP', endereco:'Av. Voluntário Benedito Sérgio, 849', bairro:'Jardim Santa Catarina', lat:-23.0186798, lng:-45.5728404 },
-  { id:'sete_estrelas_082', nome:'Sete Estrelas', cidade:'Ubatuba', uf:'SP', endereco:'Av. Leovigildo Dias Vieira, 590', bairro:'Itaguá', lat:-23.4584634, lng:-45.0575766 },
+  { id:'sete_estrelas_046', nome:'Sete Estrelas', cidade:'SapucaÃ­ Mirim', uf:'MG', endereco:'Avenida Presidente Vargas, 147', bairro:'Centro', lat:-22.7452964, lng:-45.7413841 },
+  { id:'sete_estrelas_047', nome:'Sete Estrelas', cidade:'SapucaÃ­ Mirim', uf:'MG', endereco:'Rod. MG 173 - KM 67', bairro:'Ponte Nova', lat:-22.7480012, lng:-45.7427651 },
+  { id:'sete_estrelas_048', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Av. Perseu, 752', bairro:'Jardim SatÃ©lite', lat:-23.2274965, lng:-45.8905572 },
+  { id:'sete_estrelas_049', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Rua Ceci, 215', bairro:'Jardim Paulista', lat:-23.1911123, lng:-45.8712171 },
+  { id:'sete_estrelas_050', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Rua Penedo, 1051', bairro:'Jardim PetrÃ³polis', lat:-23.2409417, lng:-45.9145075 },
+  { id:'sete_estrelas_053', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Av. Perseu, 31', bairro:'Jardim SatÃ©lite', lat:-23.2226371, lng:-45.8890273 },
+  { id:'sete_estrelas_054', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Av. Senador TeotÃ´nio Vilela, 2001', bairro:'Vila BethÃ¢nia', lat:-23.1963129, lng:-45.884706 },
+  { id:'sete_estrelas_055', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Rua JosÃ© de Campos, 66', bairro:'Cidade Morumbi', lat:-23.2593429, lng:-45.9053843 },
+  { id:'sete_estrelas_056', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Rua Paraibuna, 1340', bairro:'Vila Sanches', lat:-23.1955974, lng:-45.8878374 },
+  { id:'sete_estrelas_058', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Av. JoÃ£o Batista de Souza Soares, 2969', bairro:'Jardim Morumbi', lat:-23.2540395, lng:-45.9093949 },
+  { id:'sete_estrelas_059', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Av. Jorge Zarur, 1800', bairro:'Vila BetÃ¢nia', lat:-23.2061548, lng:-45.9051189 },
+  { id:'sete_estrelas_060', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Av. Dr. JoÃ£o Batista de Souza Soares, 3423', bairro:'Jardim Morumbi', lat:-23.2499962, lng:-45.908427 },
+  { id:'sete_estrelas_061', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Rua SÃ£o Jorge, 21', bairro:'Santana', lat:-23.1613321, lng:-45.8991287 },
+  { id:'sete_estrelas_063', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Av. Presidente Tancredo Neves, 1201', bairro:'Jd. Residencial Ana Maria', lat:-23.1896707, lng:-45.7887515 },
+  { id:'sete_estrelas_064', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Rua Benedito JuliÃ£o Machado, 49', bairro:'Vila Tupi', lat:-23.1748754, lng:-45.8768736 },
+  { id:'sete_estrelas_065', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Av. Cassiano Ricardo, 1680', bairro:'Jardim Alvorada', lat:-23.2271922, lng:-45.9124884 },
+  { id:'sete_estrelas_067', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Av. Feira de Santana, 10', bairro:'Jardim Vale do Sol', lat:-23.2562033, lng:-45.912114 },
+  { id:'sete_estrelas_068', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Av. SÃ£o JoÃ£o, 154', bairro:'Jardim AmÃ©rica', lat:-23.2108335, lng:-45.9091762 },
+  { id:'sete_estrelas_070', nome:'Sete Estrelas', cidade:'SÃ£o JosÃ© dos Campos', uf:'SP', endereco:'Av. Presidente Tancredo Neves, 1030', bairro:'Jardim TrÃªs JosÃ©', lat:-23.1840061, lng:-45.8024648 },
+  { id:'sete_estrelas_072', nome:'Sete Estrelas', cidade:'TaubatÃ©', uf:'SP', endereco:'Av. Dr. FÃ©lix Guisard Filho, 355', bairro:'BelÃ©m', lat:-23.0421835, lng:-45.5576301 },
+  { id:'sete_estrelas_073', nome:'Sete Estrelas', cidade:'TaubatÃ©', uf:'SP', endereco:'Av. Charles Schneider, 1775', bairro:'Vila Progresso', lat:-23.0238988, lng:-45.5891265 },
+  { id:'sete_estrelas_074', nome:'Sete Estrelas', cidade:'TaubatÃ©', uf:'SP', endereco:'Av. JosÃ© OlegÃ¡rio de Barros, 1462', bairro:'AreÃ£o', lat:-23.0150712, lng:-45.5561758 },
+  { id:'sete_estrelas_075', nome:'Sete Estrelas', cidade:'TaubatÃ©', uf:'SP', endereco:'Av. dos Bandeirantes, 5236', bairro:'IndependÃªncia', lat:-23.0310615, lng:-45.5488828 },
+  { id:'sete_estrelas_077', nome:'Sete Estrelas', cidade:'TaubatÃ©', uf:'SP', endereco:'Rua Padre Fischer, 1487', bairro:'Vila SÃ£o Geraldo', lat:-23.0005235, lng:-45.5537607 },
+  { id:'sete_estrelas_078', nome:'Sete Estrelas', cidade:'TaubatÃ©', uf:'SP', endereco:'Av. Dom Pedro I, 5391', bairro:'IndependÃªncia', lat:-23.0574063, lng:-45.6152253 },
+  { id:'sete_estrelas_080', nome:'Sete Estrelas', cidade:'TaubatÃ©', uf:'SP', endereco:'Av. Dom Duarte Leopoldo e Silva, 501', bairro:'Vila SÃ£o JosÃ©', lat:-23.0103679, lng:-45.5386995 },
+  { id:'sete_estrelas_081', nome:'Sete Estrelas', cidade:'TaubatÃ©', uf:'SP', endereco:'Av. VoluntÃ¡rio Benedito SÃ©rgio, 849', bairro:'Jardim Santa Catarina', lat:-23.0186798, lng:-45.5728404 },
+  { id:'sete_estrelas_082', nome:'Sete Estrelas', cidade:'Ubatuba', uf:'SP', endereco:'Av. Leovigildo Dias Vieira, 590', bairro:'ItaguÃ¡', lat:-23.4584634, lng:-45.0575766 },
   { id:'sete_estrelas_083', nome:'Sete Estrelas', cidade:'Ubatuba', uf:'SP', endereco:'Av. Marginal, 323', bairro:'Saco da Ribeiro', lat:-23.442068, lng:-45.0865643 },
-  { id:'sete_estrelas_084', nome:'Sete Estrelas', cidade:'Ubatuba', uf:'SP', endereco:'Rua das Begônias, 223', bairro:'Jardim Carolina', lat:-23.4382728, lng:-45.093676 },
+  { id:'sete_estrelas_084', nome:'Sete Estrelas', cidade:'Ubatuba', uf:'SP', endereco:'Rua das BegÃ´nias, 223', bairro:'Jardim Carolina', lat:-23.4382728, lng:-45.093676 },
 ];
 
 const LOGO_URIS = {
@@ -84,17 +84,17 @@ const LOGO_URIS = {
 };
 
 const BANNERS = [
-  { id: '1', titulo: 'Receba cashback', desc: 'Abasteça e ganhe dinheiro de volta.', icon: '💰', bg: ['#1a3a1a', '#2a5a2a'] },
-  { id: '2', titulo: 'Abasteça e economize', desc: 'Encontre os melhores preços perto de você.', icon: '⛽', bg: ['#1a2a4a', '#2a4a7a'] },
-  { id: '3', titulo: 'Indique um amigo', desc: 'Ganhe bônus indicando amigos.', icon: '👥', bg: ['#2a1a4a', '#4a2a7a'] },
-  { id: '4', titulo: 'Promoção da semana', desc: 'Descontos exclusivos para você.', icon: '🎁', bg: ['#3a2a1a', '#6a4a1a'] },
+  { id: '1', titulo: 'Receba cashback', desc: 'AbasteÃ§a e ganhe dinheiro de volta.', icon: 'ðŸ’°', bg: ['#1a3a1a', '#2a5a2a'] },
+  { id: '2', titulo: 'AbasteÃ§a e economize', desc: 'Encontre os melhores preÃ§os perto de vocÃª.', icon: 'â›½', bg: ['#1a2a4a', '#2a4a7a'] },
+  { id: '3', titulo: 'Indique um amigo', desc: 'Ganhe bÃ´nus indicando amigos.', icon: 'ðŸ‘¥', bg: ['#2a1a4a', '#4a2a7a'] },
+  { id: '4', titulo: 'PromoÃ§Ã£o da semana', desc: 'Descontos exclusivos para vocÃª.', icon: 'ðŸŽ', bg: ['#3a2a1a', '#6a4a1a'] },
 ];
 
 const ATALHOS = [
-  { icon: '⛽', label: 'Abastecer', sub: 'Encontre postos', screen: 'Autorizacao' },
-  { icon: '👛', label: 'Carteira',  sub: 'Ver extrato',     screen: 'Carteira'   },
-  { icon: '💰', label: 'Cashback',  sub: 'Ver meus ganhos', screen: 'Carteira'   },
-  { icon: '🕐', label: 'Histórico', sub: 'Últimas atividades', screen: 'Historico' },
+  { icon: 'â›½', label: 'Abastecer', sub: 'Encontre postos', screen: 'NFC' },
+  { icon: 'ðŸ‘›', label: 'Carteira',  sub: 'Ver extrato',     screen: 'Carteira'   },
+  { icon: 'ðŸ’°', label: 'Cashback',  sub: 'Ver meus ganhos', screen: 'Carteira'   },
+  { icon: 'ðŸ•', label: 'HistÃ³rico', sub: 'Ãšltimas atividades', screen: 'Historico' },
 ];
 
 function buildMapHTML(userLat, userLng, logoUris) {
@@ -168,7 +168,7 @@ function getBrand(nome) {
 }
 function makePinHtml(brand, size) {
   var s = size || 46;
-  var inner = brand.logo ? '<img src="' + brand.logo + '">' : '<span style="font-size:' + Math.round(s*0.45) + 'px">⛽</span>';
+  var inner = brand.logo ? '<img src="' + brand.logo + '">' : '<span style="font-size:' + Math.round(s*0.45) + 'px">â›½</span>';
   var bubble = '<div class="posto-bubble" style="width:'+s+'px;height:'+s+'px;border-radius:'+Math.round(s*0.22)+'px;background:' + brand.bg + '">' + inner + '</div>';
   var tw = Math.round(s*0.3); var th = Math.round(s*0.2);
   var tail = '<div style="width:0;height:0;border-left:'+tw+'px solid transparent;border-right:'+tw+'px solid transparent;border-top:'+th+'px solid '+brand.bg+';margin-top:-1px"></div>';
@@ -312,17 +312,17 @@ export default function MapaScreen({ navigation }) {
               }
             </View>
             <View>
-              <Text style={styles.headerSub}>Olá,</Text>
+              <Text style={styles.headerSub}>OlÃ¡,</Text>
               <Text style={styles.headerName}>{primeiroNome}!</Text>
             </View>
           </TouchableOpacity>
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Notificacoes')}>
-              <Text style={styles.iconBtnText}>🔔</Text>
+              <Text style={styles.iconBtnText}>ðŸ””</Text>
               <View style={styles.notifDot} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Perfil')}>
-              <Text style={styles.iconBtnText}>👤</Text>
+              <Text style={styles.iconBtnText}>ðŸ‘¤</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -330,7 +330,7 @@ export default function MapaScreen({ navigation }) {
         {/* Card Cashback */}
         <View style={styles.cashbackCard}>
           <View style={styles.cashbackIconWrap}>
-            <Text style={{ fontSize: 22 }}>💰</Text>
+            <Text style={{ fontSize: 22 }}>ðŸ’°</Text>
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.cashbackLabel}>CASHBACK ACUMULADO</Text>
@@ -358,15 +358,15 @@ export default function MapaScreen({ navigation }) {
           )}
         />
 
-        {/* Postos próximos */}
+        {/* Postos prÃ³ximos */}
         <View style={styles.mapaSection}>
           <View style={styles.mapaSectionHeader}>
             <View>
-              <Text style={styles.mapaTitulo}>📍 Postos próximos</Text>
-              <Text style={styles.mapaSub}>Encontre postos perto de você.</Text>
+              <Text style={styles.mapaTitulo}>ðŸ“ Postos prÃ³ximos</Text>
+              <Text style={styles.mapaSub}>Encontre postos perto de vocÃª.</Text>
             </View>
             <TouchableOpacity style={styles.verMapaBtn}>
-              <Text style={styles.verMapaText}>Ver mapa completo ›</Text>
+              <Text style={styles.verMapaText}>Ver mapa completo â€º</Text>
             </TouchableOpacity>
           </View>
 
@@ -393,34 +393,34 @@ export default function MapaScreen({ navigation }) {
               style={styles.myLocBtn}
               onPress={() => userLocation && webRef.current?.injectJavaScript(`map.setView([${userLocation.lat}, ${userLocation.lng}], 15); true;`)}
             >
-              <Text style={styles.myLocBtnText}>{locationError ? '⚠️' : '📍'}</Text>
+              <Text style={styles.myLocBtnText}>{locationError ? 'âš ï¸' : 'ðŸ“'}</Text>
             </TouchableOpacity>
 
-            {/* Card do posto — overlay sobre o mapa */}
+            {/* Card do posto â€” overlay sobre o mapa */}
             {postoSelecionado && (
               <View style={styles.postoPopup}>
                 <View style={styles.postoPopupIcon}>
-                  <Text style={{ fontSize: 22 }}>⛽</Text>
+                  <Text style={{ fontSize: 22 }}>â›½</Text>
                 </View>
                 <View style={styles.postoPopupInfo}>
                   <Text style={styles.postoPopupNome} numberOfLines={1}>{postoSelecionado.nome}</Text>
                   <Text style={styles.postoPopupEnde} numberOfLines={1}>
-                    {postoSelecionado.endereco} — {postoSelecionado.cidade}/{postoSelecionado.uf}
+                    {postoSelecionado.endereco} â€” {postoSelecionado.cidade}/{postoSelecionado.uf}
                   </Text>
                 </View>
                 <View style={styles.postoPopupBtns}>
                   <TouchableOpacity style={styles.btnVisualizar} onPress={() => setModalVisivel(true)}>
-                    <Text style={styles.btnVisualizarText}>👁 Ver</Text>
+                    <Text style={styles.btnVisualizarText}>ðŸ‘ Ver</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.btnAbastecer}
-                    onPress={() => navigation.navigate('Autorizacao', { posto: postoSelecionado })}
+                    onPress={() => navigation.navigate('NFC', { posto: postoSelecionado })}
                   >
-                    <Text style={styles.btnAbastecerText}>⚡</Text>
+                    <Text style={styles.btnAbastecerText}>âš¡</Text>
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity style={styles.postoPopupClose} onPress={() => setPostoSelecionado(null)}>
-                  <Text style={styles.postoPopupCloseText}>✕</Text>
+                  <Text style={styles.postoPopupCloseText}>âœ•</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -428,9 +428,9 @@ export default function MapaScreen({ navigation }) {
 
           {/* Legenda */}
           <View style={styles.legenda}>
-            <View style={styles.legendaItem}><View style={[styles.legendaDot, { backgroundColor: '#6DC229' }]} /><Text style={styles.legendaText}>Baixo preço</Text></View>
-            <View style={styles.legendaItem}><View style={[styles.legendaDot, { backgroundColor: '#F5A623' }]} /><Text style={styles.legendaText}>Preço médio</Text></View>
-            <View style={styles.legendaItem}><View style={[styles.legendaDot, { backgroundColor: '#E53935' }]} /><Text style={styles.legendaText}>Alto preço</Text></View>
+            <View style={styles.legendaItem}><View style={[styles.legendaDot, { backgroundColor: '#6DC229' }]} /><Text style={styles.legendaText}>Baixo preÃ§o</Text></View>
+            <View style={styles.legendaItem}><View style={[styles.legendaDot, { backgroundColor: '#F5A623' }]} /><Text style={styles.legendaText}>PreÃ§o mÃ©dio</Text></View>
+            <View style={styles.legendaItem}><View style={[styles.legendaDot, { backgroundColor: '#E53935' }]} /><Text style={styles.legendaText}>Alto preÃ§o</Text></View>
           </View>
         </View>
 
@@ -447,23 +447,23 @@ export default function MapaScreen({ navigation }) {
                 <Text style={styles.modalCidade}>{postoSelecionado?.cidade}/{postoSelecionado?.uf}</Text>
               </View>
               <TouchableOpacity onPress={() => setModalVisivel(false)} style={styles.modalCloseBtn}>
-                <Text style={styles.modalCloseText}>✕</Text>
+                <Text style={styles.modalCloseText}>âœ•</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.modalEnderecoRow}>
-              <Text style={styles.modalEnderecoIcon}>📍</Text>
+              <Text style={styles.modalEnderecoIcon}>ðŸ“</Text>
               <Text style={styles.modalEndereco}>
                 {postoSelecionado?.endereco}{postoSelecionado?.bairro ? `, ${postoSelecionado.bairro}` : ''}
               </Text>
             </View>
             <View style={styles.modalDivider} />
-            <Text style={styles.modalSecTitle}>Combustíveis</Text>
+            <Text style={styles.modalSecTitle}>CombustÃ­veis</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {[
-                { tipo: 'Gasolina Comum',     icone: '🔴', preco: 'R$ 5,89' },
-                { tipo: 'Gasolina Aditivada', icone: '🟡', preco: 'R$ 6,19' },
-                { tipo: 'Etanol',             icone: '🟢', preco: 'R$ 3,99' },
-                { tipo: 'Diesel S-10',        icone: '🔵', preco: 'R$ 6,49' },
+                { tipo: 'Gasolina Comum',     icone: 'ðŸ”´', preco: 'R$ 5,89' },
+                { tipo: 'Gasolina Aditivada', icone: 'ðŸŸ¡', preco: 'R$ 6,19' },
+                { tipo: 'Etanol',             icone: 'ðŸŸ¢', preco: 'R$ 3,99' },
+                { tipo: 'Diesel S-10',        icone: 'ðŸ”µ', preco: 'R$ 6,49' },
               ].map(c => (
                 <View key={c.tipo} style={styles.combustivelRow}>
                   <Text style={styles.combustivelIcone}>{c.icone}</Text>
@@ -475,9 +475,9 @@ export default function MapaScreen({ navigation }) {
             <View style={styles.modalDivider} />
             <TouchableOpacity
               style={styles.modalBtnAbastecer}
-              onPress={() => { setModalVisivel(false); navigation.navigate('Autorizacao', { posto: postoSelecionado }); }}
+              onPress={() => { setModalVisivel(false); navigation.navigate('NFC', { posto: postoSelecionado }); }}
             >
-              <Text style={styles.modalBtnAbastecerText}>⚡ Abastecer agora</Text>
+              <Text style={styles.modalBtnAbastecerText}>âš¡ Abastecer agora</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -486,11 +486,11 @@ export default function MapaScreen({ navigation }) {
       {/* Bottom Nav */}
       <View style={styles.bottomNav}>
         {[
-          { icon: '🗺️', label: 'Mapa',      screen: 'Mapa',        active: true  },
-          { icon: '⛽',  label: 'Abastecer', screen: 'Autorizacao', active: false },
-          { icon: '👛',  label: 'Carteira',  screen: 'Carteira',    active: false },
-          { icon: '🕐',  label: 'Histórico', screen: 'Historico',   active: false },
-          { icon: '👤',  label: 'Perfil',    screen: 'Perfil',      active: false },
+          { icon: 'ðŸ—ºï¸', label: 'Mapa',      screen: 'Mapa',        active: true  },
+          { icon: 'â›½',  label: 'Abastecer', screen: 'NFC', active: false },
+          { icon: 'ðŸ‘›',  label: 'Carteira',  screen: 'Carteira',    active: false },
+          { icon: 'ðŸ•',  label: 'HistÃ³rico', screen: 'Historico',   active: false },
+          { icon: 'ðŸ‘¤',  label: 'Perfil',    screen: 'Perfil',      active: false },
         ].map(item => (
           <TouchableOpacity
             key={item.label}
@@ -698,3 +698,4 @@ const styles = StyleSheet.create({
   navLabel: { fontSize: 9, color: colors.textSec, fontWeight: '500' },
   navLabelActive: { color: colors.verde, fontWeight: '700' },
 });
+

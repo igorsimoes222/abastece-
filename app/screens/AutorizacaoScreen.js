@@ -35,30 +35,49 @@ export default function AutorizacaoScreen({ navigation, route }) {
   }, []);
 
   const preAuth = route?.params?.preAuth ?? null;
+  const nfcDetected = route?.params?.nfcDetected ?? false;
+  const bicoNFC = route?.params?.bicoNFC ?? '';
+  const combustivelNFC = route?.params?.combustivel ?? '';
 
   // etapa: 1=número bico, 2=código adesivo, 3=valor, 4=confirmar
-  const [etapa, setEtapa] = useState(1);
-  const [bico, setBico] = useState('');
+  // Quando NFC detectado → começa na etapa 3 (bico já identificado)
+  const [etapa, setEtapa] = useState(nfcDetected ? 3 : 1);
+  const [bico, setBico] = useState(nfcDetected ? bicoNFC : '');
   const [codigo, setCodigo] = useState('');
-  const [codigoStatus, setCodigoStatus] = useState(null); // null | 'validando' | 'ok' | 'erro'
+  const [codigoStatus, setCodigoStatus] = useState(nfcDetected ? 'ok' : null);
   const [codigoErro, setCodigoErro] = useState('');
-  const [bicoCombustivel, setBicoCombustivel] = useState('');
+  const [bicoCombustivel, setBicoCombustivel] = useState(nfcDetected ? combustivelNFC : '');
   const [querDefinirValor, setQuerDefinirValor] = useState(null);
   const [valor, setValor] = useState(preAuth ? preAuth.valor : '100,00');
   const [valorPersonalizado, setValorPersonalizado] = useState(false);
   const [valorInput, setValorInput] = useState('');
   const [autorizando, setAutorizando] = useState(false);
 
-  const stepLabels = ['Posto', 'Bico', 'Código', 'Valor', 'Confirmar'];
+  const stepLabels = nfcDetected
+    ? ['Posto', 'NFC', 'Valor', 'Confirmar']
+    : ['Posto', 'Bico', 'Código', 'Valor', 'Confirmar'];
+
+  // Mapeia etapa interna (1-4) para índice do step quando NFC ativo
+  const stepIndex = nfcDetected
+    ? { 3: 2, 4: 3 }   // etapa 3 = step 2 (Valor), etapa 4 = step 3 (Confirmar)
+    : { 1: 1, 2: 2, 3: 3, 4: 4 };
 
   const stepDone = (i) => {
     if (i === 0) return true;
+    if (nfcDetected) {
+      if (i === 1) return true; // NFC step always done
+      if (i === 2) return etapa > 3;
+      return false;
+    }
     if (i === 1) return etapa > 1;
     if (i === 2) return etapa > 2;
     if (i === 3) return etapa > 3;
     return false;
   };
-  const stepActive = (i) => etapa === i;
+  const stepActive = (i) => {
+    if (nfcDetected) return i === (stepIndex[etapa] ?? -1);
+    return etapa === i;
+  };
 
   const confirmarBico = () => {
     if (!bico.trim()) return;
@@ -114,10 +133,9 @@ export default function AutorizacaoScreen({ navigation, route }) {
   const cashbackEst = ((valorNum * parseFloat(posto.cashback)) / 100)
     .toFixed(2).replace('.', ',');
 
-  const subTitulo = [
-    '', 'Digite o número do bico', 'Digite o código do adesivo',
-    'Defina o valor', 'Confirme e autorize',
-  ][etapa];
+  const subTitulo = nfcDetected
+    ? ['', '', '', 'Defina o valor', 'Confirme e autorize'][etapa]
+    : ['', 'Digite o número do bico', 'Digite o código do adesivo', 'Defina o valor', 'Confirme e autorize'][etapa];
 
   return (
     <ScreenWrapper edges={['top']}>
@@ -152,7 +170,7 @@ export default function AutorizacaoScreen({ navigation, route }) {
                 {label}
               </Text>
             </View>
-            {i < 4 && <View style={[styles.stepLine, stepDone(i) && styles.stepLineDone]} />}
+            {i < stepLabels.length - 1 && <View style={[styles.stepLine, stepDone(i) && styles.stepLineDone]} />}
           </React.Fragment>
         ))}
       </View>
@@ -254,6 +272,18 @@ export default function AutorizacaoScreen({ navigation, route }) {
                 <Text style={styles.erroText}>{codigoErro}</Text>
               </View>
             )}
+          </View>
+        )}
+
+        {/* Badge NFC detectado */}
+        {nfcDetected && etapa >= 3 && (
+          <View style={styles.nfcBadge}>
+            <Text style={styles.nfcBadgeIcon}>📡</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.nfcBadgeTitulo}>Bico #{String(bico).padStart(2, '0')} identificado via NFC</Text>
+              <Text style={styles.nfcBadgeDesc}>{bicoCombustivel || 'Combustível detectado automaticamente'}</Text>
+            </View>
+            <Text style={styles.nfcBadgeCheck}>✓</Text>
           </View>
         )}
 
@@ -640,6 +670,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.md, padding: 10, marginTop: 6,
   },
   infoText: { fontSize: 12, color: '#7B9FD4', lineHeight: 16 },
+
+  nfcBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: 'rgba(108,194,74,0.08)',
+    borderWidth: 1.5, borderColor: 'rgba(108,194,74,0.3)',
+    borderRadius: radius.xl, padding: 14,
+  },
+  nfcBadgeIcon: { fontSize: 26 },
+  nfcBadgeTitulo: { fontSize: 14, fontWeight: '800', color: colors.verde },
+  nfcBadgeDesc: { fontSize: 12, color: colors.textSec, marginTop: 2 },
+  nfcBadgeCheck: { fontSize: 20, color: colors.verde, fontWeight: '900' },
 
   footer: { padding: spacing.xl, paddingBottom: spacing.xl },
   btnConfirm: {
