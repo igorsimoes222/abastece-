@@ -17,3 +17,8 @@ export * from './entities/Carteira';
 export * from './entities/Frota';
 export * from './entities/Veiculo';
 export * from './entities/Motorista';
+
+export * from './services/AutorizacaoService';
+export * from './services/PagamentoAbastecimentoService';
+export * from './services/PreAutorizacaoService';
+export * from './services/FrotaService';
