@@ -630,5 +630,15 @@ inicializarBanco().catch(console.error);
 server.listen(SERVER_PORT, () => {
   console.log('Abastece+ Backend rodando na porta ' + SERVER_PORT);
   console.log('CBC configurado: ' + CBC_HOST + ':' + CBC_PORT);
-  console.log('Para apontar ao posto: CBC_HOST=<IP> node server.js');
+
+  // Anuncia o backend na rede local via mDNS
+  // O app se conecta por "abasteceplus.local" sem precisar saber o IP
+  try {
+    const { Bonjour } = require('bonjour-service');
+    const bonjour = new Bonjour();
+    bonjour.publish({ name: 'Abastece+ Backend', type: 'http', port: SERVER_PORT });
+    console.log('mDNS ativo — acessível em: abasteceplus.local:' + SERVER_PORT);
+  } catch (e) {
+    console.warn('mDNS indisponível:', e.message);
+  }
 });
