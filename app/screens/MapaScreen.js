@@ -97,6 +97,20 @@ const ATALHOS = [
   { icon: '🕐', label: 'Histórico', sub: 'Últimas atividades', screen: 'Historico' },
 ];
 
+const RAIO_ABASTECER_METROS = 150;
+
+// Fórmula de Haversine — distância em metros entre dois pontos GPS
+function calcularDistancia(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 function buildMapHTML(userLat, userLng, logoUris) {
   const centerLat = userLat ?? -14.2350;
   const centerLng = userLng ?? -51.9253;
@@ -288,6 +302,13 @@ export default function MapaScreen({ navigation }) {
 
   const mapHTML = buildMapHTML(userLocation?.lat, userLocation?.lng, LOGO_URIS);
 
+  // Verifica se usuário está dentro do raio do posto selecionado
+  const distanciaAoPosto = (userLocation && postoSelecionado)
+    ? calcularDistancia(userLocation.lat, userLocation.lng, postoSelecionado.lat, postoSelecionado.lng)
+    : null;
+  const dentroDoRaio = distanciaAoPosto !== null && distanciaAoPosto <= RAIO_ABASTECER_METROS;
+  const podAbastecer = dentroDoRaio || locationError; // se não tem GPS, não bloqueia
+
   return (
     <ScreenWrapper edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
@@ -413,12 +434,24 @@ export default function MapaScreen({ navigation }) {
                     <Text style={styles.btnVisualizarText}>👁 Ver</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.btnAbastecer}
-                    onPress={() => navigation.navigate('NFC', { posto: postoSelecionado })}
+                    style={[styles.btnAbastecer, !podAbastecer && styles.btnAbastecerBloqueado]}
+                    onPress={() => podAbastecer && navigation.navigate('Autorizacao', { posto: postoSelecionado })}
+                    disabled={!podAbastecer}
                   >
-                    <Text style={styles.btnAbastecerText}>⚡</Text>
+                    <Text style={styles.btnAbastecerText}>{podAbastecer ? '⚡' : '🔒'}</Text>
                   </TouchableOpacity>
                 </View>
+                {/* Aviso de distância */}
+                {distanciaAoPosto !== null && !dentroDoRaio && (
+                  <View style={styles.distanciaAviso}>
+                    <Text style={styles.distanciaAvisoText}>
+                      {distanciaAoPosto >= 1000
+                        ? `Você está a ${(distanciaAoPosto / 1000).toFixed(1)} km do posto`
+                        : `Você está a ${Math.round(distanciaAoPosto)} m do posto`}
+                      {' '}— chegue ao posto para abastecer
+                    </Text>
+                  </View>
+                )}
                 <TouchableOpacity style={styles.postoPopupClose} onPress={() => setPostoSelecionado(null)}>
                   <Text style={styles.postoPopupCloseText}>✕</Text>
                 </TouchableOpacity>
@@ -474,11 +507,25 @@ export default function MapaScreen({ navigation }) {
             </ScrollView>
             <View style={styles.modalDivider} />
             <TouchableOpacity
-              style={styles.modalBtnAbastecer}
-              onPress={() => { setModalVisivel(false); navigation.navigate('NFC', { posto: postoSelecionado }); }}
+              style={[styles.modalBtnAbastecer, !podAbastecer && { backgroundColor: colors.border }]}
+              onPress={() => {
+                if (!podAbastecer) return;
+                setModalVisivel(false);
+                navigation.navigate('Autorizacao', { posto: postoSelecionado });
+              }}
+              disabled={!podAbastecer}
             >
-              <Text style={styles.modalBtnAbastecerText}>⚡ Abastecer agora</Text>
+              <Text style={styles.modalBtnAbastecerText}>
+                {podAbastecer ? '⚡ Abastecer agora' : `🔒 Chegue ao posto para abastecer`}
+              </Text>
             </TouchableOpacity>
+            {distanciaAoPosto !== null && !dentroDoRaio && (
+              <Text style={styles.modalDistanciaText}>
+                Você está a {distanciaAoPosto >= 1000
+                  ? `${(distanciaAoPosto / 1000).toFixed(1)} km`
+                  : `${Math.round(distanciaAoPosto)} m`} deste posto
+              </Text>
+            )}
           </View>
         </View>
       </Modal>
@@ -659,7 +706,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.verde, borderRadius: 10,
     width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
   },
+  btnAbastecerBloqueado: { backgroundColor: colors.border },
   btnAbastecerText: { fontSize: 16 },
+  distanciaAviso: {
+    backgroundColor: 'rgba(229,57,53,0.08)',
+    borderTopWidth: 1, borderTopColor: 'rgba(229,57,53,0.15)',
+    paddingHorizontal: 12, paddingVertical: 6,
+  },
+  distanciaAvisoText: { fontSize: 11, color: '#E57373', textAlign: 'center' },
+  modalDistanciaText: {
+    fontSize: 12, color: colors.textMuted,
+    textAlign: 'center', marginTop: 8,
+  },
   postoPopupClose: { padding: 4 },
   postoPopupCloseText: { color: colors.textMuted, fontSize: 16 },
 
