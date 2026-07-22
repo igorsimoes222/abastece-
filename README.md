@@ -93,7 +93,7 @@ Cliente (app) → confirma → Cielo processa pagamento
 | Projeto | Responsável |
 |---|---|
 | `mobile-front` | Igor |
-| `mobile-backend` | Igor |
+| `mobile-backend` | Ana |
 | `posto-agente` | Sérgio |
 | `posto-front` | A definir |
 
