@@ -1,9 +1,11 @@
-const bcrypt  = require('bcryptjs');
-const jwt     = require('jsonwebtoken');
-const { knex } = require('./db');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { knex } = require('../db/db');
+const { JWT_SECRET } = require('../env');
 
-const JWT_SECRET  = process.env.JWT_SECRET || 'abasteceplus_dev_secret_2026';
-const JWT_EXPIRES = '30d';
+// 7 dias em vez dos 30 anteriores — reduz a janela de um token vazado sem
+// exigir infraestrutura completa de refresh token ainda (ver README).
+const JWT_EXPIRES = '7d';
 
 // ─── Cadastro ─────────────────────────────────────────────────────────────────
 async function cadastrar({ nome, email, senha, telefone, cpf, perfil }) {
@@ -14,15 +16,18 @@ async function cadastrar({ nome, email, senha, telefone, cpf, perfil }) {
   if (emailExiste)
     throw { status: 409, mensagem: 'E-mail já cadastrado' };
 
+  let cpfLimpo = null;
   if (cpf) {
-    const cpfLimpo = cpf.replace(/\D/g, '');
+    cpfLimpo = cpf.replace(/\D/g, '');
+    if (!/^\d{11}$/.test(cpfLimpo))
+      throw { status: 400, mensagem: 'CPF inválido' };
+
     const cpfExiste = await knex('usuarios').where({ cpf: cpfLimpo }).first();
     if (cpfExiste)
       throw { status: 409, mensagem: 'CPF já cadastrado' };
   }
 
   const senha_hash = await bcrypt.hash(senha, 10);
-  const cpfLimpo   = cpf ? cpf.replace(/\D/g, '') : null;
 
   const [id] = await knex('usuarios').insert({
     nome,

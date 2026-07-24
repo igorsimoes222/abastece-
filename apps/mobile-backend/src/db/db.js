@@ -2,7 +2,7 @@
  * Camada de banco de dados — Knex.js
  *
  * Hoje: SQLite (arquivo local)
- * Produção: trocar config para PostgreSQL sem mudar nada mais
+ * Produção: trocar config para PostgreSQL sem mudar mais nada
  *
  * Para migrar para PostgreSQL:
  *   1. npm install pg
@@ -15,7 +15,7 @@ const path = require('path');
 
 const knex = require('knex')({
   client: 'better-sqlite3',
-  connection: { filename: path.join(__dirname, 'abasteceplus.db') },
+  connection: { filename: path.join(__dirname, '../../abasteceplus.db') },
   useNullAsDefault: true,
 });
 
@@ -80,12 +80,6 @@ async function inicializarBanco() {
       if (!temCodigo) {
         await knex.schema.table('bicos', t => t.string('codigo_adesivo', 20));
       }
-      // numero_cbc: endereço lógico do bico no concentrador (hex, ex: "4D")
-      // Se nulo, usa conversão padrão decimal→hex do numero do bico
-      const temCbc = await knex.schema.hasColumn('bicos', 'numero_cbc');
-      if (!temCbc) {
-        await knex.schema.table('bicos', t => t.string('numero_cbc', 4));
-      }
     }
   });
 
@@ -110,7 +104,7 @@ async function inicializarBanco() {
         'cancelado',       // cancelado pelo usuário
         'erro',
       ]).defaultTo('aguardando');
-      t.string('ciclo_id');             // ID retornado pela HORUSTECH
+      t.string('ciclo_id');             // ID retornado pela automação
       t.timestamp('iniciado_em');
       t.timestamp('concluido_em');
       t.timestamps(true, true);
