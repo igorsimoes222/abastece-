@@ -150,6 +150,7 @@ const s = StyleSheet.create({
   container: {
     paddingHorizontal: 24,
     paddingTop: 0,
+    marginTop: -40,
     paddingBottom: 40,
     gap: 0,
   },
