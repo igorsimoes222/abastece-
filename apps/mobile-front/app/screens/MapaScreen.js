@@ -29,7 +29,7 @@ const BANNERS = [
 ];
 
 const ATALHOS = [
-  { icon: '⛽', label: 'Abastecer', sub: 'Encontre postos', screen: 'NFC' },
+  { icon: '⛽', label: 'Abastecer', sub: 'Escolha um posto', screen: 'Autorizacao' },
   { icon: '👛', label: 'Carteira',  sub: 'Ver extrato',     screen: 'Carteira'   },
   { icon: '💰', label: 'Cashback',  sub: 'Ver meus ganhos', screen: 'Carteira'   },
   { icon: '🕐', label: 'Histórico', sub: 'Últimas atividades', screen: 'Historico' },
@@ -489,7 +489,7 @@ export default function MapaScreen({ navigation }) {
       <View style={styles.bottomNav}>
         {[
           { icon: '🗺️', label: 'Mapa',      screen: 'Mapa',        active: true  },
-          { icon: '⛽',  label: 'Abastecer', screen: 'NFC', active: false },
+          { icon: '⛽',  label: 'Abastecer', screen: 'Autorizacao', active: false },
           { icon: '👛',  label: 'Carteira',  screen: 'Carteira',    active: false },
           { icon: '🕐',  label: 'Histórico', screen: 'Historico',   active: false },
           { icon: '👤',  label: 'Perfil',    screen: 'Perfil',      active: false },

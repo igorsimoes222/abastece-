@@ -24,7 +24,6 @@ import PagoDiretoPostoScreen from './app/screens/PagoDiretoPostoScreen';
 import DadosPessoaisScreen from './app/screens/DadosPessoaisScreen';
 import SegurancaScreen from './app/screens/SegurancaScreen';
 import NotificacoesScreen from './app/screens/NotificacoesScreen';
-import NFCScreen from './app/screens/NFCScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -83,7 +82,7 @@ export default function App() {
         <Stack.Screen name="DadosPessoais" component={DadosPessoaisScreen} />
         <Stack.Screen name="Seguranca" component={SegurancaScreen} />
         <Stack.Screen name="Notificacoes" component={NotificacoesScreen} />
-        <Stack.Screen name="NFC" component={NFCScreen} />
+
       </Stack.Navigator>
     </NavigationContainer>
     </AuthProvider>
