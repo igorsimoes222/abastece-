@@ -150,7 +150,6 @@ const s = StyleSheet.create({
   container: {
     paddingHorizontal: 24,
     paddingTop: 0,
-    marginTop: -40,
     paddingBottom: 40,
     gap: 0,
   },
@@ -158,6 +157,7 @@ const s = StyleSheet.create({
   logo: {
     width: '90%',
     height: 500,
+    marginTop: -40,
     marginBottom: -220,
     alignSelf: 'center',
   },
