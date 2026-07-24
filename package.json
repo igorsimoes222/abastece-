@@ -1,0 +1,10 @@
+{
+  "name": "abasteceplus",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Abastece+ — monorepo (app mobile, backend, agente e frente do posto, dominio compartilhado)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
