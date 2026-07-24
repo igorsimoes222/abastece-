@@ -149,7 +149,7 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   container: {
     paddingHorizontal: 24,
-    paddingTop: 28,
+    paddingTop: 8,
     paddingBottom: 40,
     gap: 0,
   },
@@ -157,11 +157,11 @@ const s = StyleSheet.create({
   logo: {
     width: '90%',
     height: 220,
-    marginBottom: 28,
+    marginBottom: 12,
     alignSelf: 'center',
   },
 
-  statsRow: { flexDirection: 'row', gap: 8, marginBottom: 28 },
+  statsRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   statCard: {
     flex: 1,
     borderRadius: radius.lg,
