@@ -1,22 +1,32 @@
 export const colors = {
-  bg: '#0d1117',
-  surface: '#161b27',
-  card: '#1e2535',
-  border: '#2d3748',
-  accent: '#2563eb',
-  accent2: '#0ea5e9',
-  green: '#10b981',
-  amber: '#f59e0b',
-  red: '#ef4444',
-  text: '#e8edf8',
-  muted: '#8892a4',
-  white: '#ffffff',
-};
+  // Backgrounds
+  bg: '#060F1A',
+  surface: '#0C1929',
+  card: '#0F2035',
+  border: 'rgba(255,255,255,0.07)',
 
-export const fonts = {
-  regular: 'System',
-  medium: 'System',
-  bold: 'System',
+  // Brand
+  verde: '#4ADE80',
+  verdeBg: 'rgba(74,222,128,0.12)',
+  verdeBorder: 'rgba(74,222,128,0.22)',
+  laranja: '#FB923C',
+  laranjaBg: 'rgba(251,146,60,0.13)',
+
+  // Text
+  text: '#EDF4FF',
+  textSec: '#7B97B4',
+  textMuted: '#324A62',
+
+  // Semantic
+  red: '#ef4444',
+  white: '#ffffff',
+
+  // Legacy aliases (manter compatibilidade com telas existentes)
+  accent: '#4ADE80',
+  accent2: '#4ADE80',
+  green: '#4ADE80',
+  amber: '#FB923C',
+  muted: '#7B97B4',
 };
 
 export const radius = {

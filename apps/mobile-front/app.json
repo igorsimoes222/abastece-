@@ -24,7 +24,9 @@
     },
     "scheme": "abasteceplus",
     "plugins": [
-      "expo-location"
+      "expo-location",
+      "expo-asset",
+      "expo-font"
     ]
   }
 }
