@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
+  StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'react-native';
@@ -10,10 +10,35 @@ import { colors, radius } from '../../components/theme';
 
 const logoDeitada = require('../../assets/logodeitada.png');
 
+// Anima um número de 0 até o target em `duration` ms
+function useCountUp(target, duration = 1400, delay = 0) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    let t = setTimeout(() => {
+      const start = Date.now();
+      const tick = () => {
+        const elapsed = Date.now() - start;
+        const progress = Math.min(elapsed / duration, 1);
+        // easeOutExpo
+        const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+        setValue(Math.round(ease * target));
+        if (progress < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }, delay);
+    return () => clearTimeout(t);
+  }, []);
+  return value;
+}
+
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [showSenha, setShowSenha] = useState(false);
+
+  const postos   = useCountUp(12, 1200, 100);
+  const cashback = useCountUp(5,  900,  300);
+  const usuarios = useCountUp(500, 1400, 200);
 
   return (
     <SafeAreaView style={s.safe}>
@@ -36,15 +61,15 @@ export default function LoginScreen({ navigation }) {
           {/* Stats de impacto */}
           <View style={s.statsRow}>
             <View style={[s.statCard, s.statVerde]}>
-              <Text style={[s.statNum, { color: colors.verde }]}>12k+</Text>
+              <Text style={[s.statNum, { color: colors.verde }]}>{postos}k+</Text>
               <Text style={[s.statLabel, { color: 'rgba(74,222,128,0.5)' }]}>POSTOS</Text>
             </View>
             <View style={[s.statCard, s.statLaranja]}>
-              <Text style={[s.statNum, { color: colors.laranja }]}>5%</Text>
+              <Text style={[s.statNum, { color: colors.laranja }]}>{cashback}%</Text>
               <Text style={[s.statLabel, { color: 'rgba(251,146,60,0.5)' }]}>CASHBACK</Text>
             </View>
             <View style={[s.statCard, s.statNeutro]}>
-              <Text style={[s.statNum, { color: colors.text }]}>500k</Text>
+              <Text style={[s.statNum, { color: colors.text }]}>{usuarios}k</Text>
               <Text style={[s.statLabel, { color: colors.textMuted }]}>USUÁRIOS</Text>
             </View>
           </View>
