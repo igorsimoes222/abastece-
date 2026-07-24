@@ -156,8 +156,8 @@ const s = StyleSheet.create({
 
   logo: {
     width: '90%',
-    height: 440,
-    marginBottom: -160,
+    height: 500,
+    marginBottom: -220,
     alignSelf: 'center',
   },
 
