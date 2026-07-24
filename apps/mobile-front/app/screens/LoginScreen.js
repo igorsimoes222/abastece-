@@ -130,10 +130,10 @@ const s = StyleSheet.create({
   },
 
   logo: {
-    width: '85%',
-    height: 72,
+    width: '90%',
+    height: 110,
     marginBottom: 28,
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
   },
 
   statsRow: { flexDirection: 'row', gap: 8, marginBottom: 28 },
