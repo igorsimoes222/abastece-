@@ -373,41 +373,43 @@ export default function MapaScreen({ navigation }) {
             {/* Card do posto — overlay sobre o mapa */}
             {postoSelecionado && (
               <View style={styles.postoPopup}>
-                <View style={styles.postoPopupIcon}>
-                  <Text style={{ fontSize: 22 }}>⛽</Text>
-                </View>
-                <View style={styles.postoPopupInfo}>
-                  <Text style={styles.postoPopupNome} numberOfLines={1}>{postoSelecionado.nome}</Text>
-                  <Text style={styles.postoPopupEnde} numberOfLines={1}>
-                    {postoSelecionado.endereco} — {postoSelecionado.cidade}/{postoSelecionado.uf}
-                  </Text>
-                </View>
-                <View style={styles.postoPopupBtns}>
-                  <TouchableOpacity style={styles.btnVisualizar} onPress={() => setModalVisivel(true)}>
-                    <Text style={styles.btnVisualizarText}>👁 Ver</Text>
+                {/* Linha principal: ícone + info + botões + fechar */}
+                <View style={styles.postoPopupRow}>
+                  <View style={styles.postoPopupIcon}>
+                    <Text style={{ fontSize: 22 }}>⛽</Text>
+                  </View>
+                  <View style={styles.postoPopupInfo}>
+                    <Text style={styles.postoPopupNome} numberOfLines={1}>{postoSelecionado.nome}</Text>
+                    <Text style={styles.postoPopupEnde} numberOfLines={1}>
+                      {postoSelecionado.endereco} — {postoSelecionado.cidade}/{postoSelecionado.uf}
+                    </Text>
+                  </View>
+                  <View style={styles.postoPopupBtns}>
+                    <TouchableOpacity style={styles.btnVisualizar} onPress={() => setModalVisivel(true)}>
+                      <Text style={styles.btnVisualizarText}>👁 Ver</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.btnAbastecer, !podAbastecer && styles.btnAbastecerBloqueado]}
+                      onPress={() => podAbastecer && navigation.navigate('Autorizacao', { posto: postoSelecionado })}
+                      disabled={!podAbastecer}
+                    >
+                      <Text style={styles.btnAbastecerText}>{podAbastecer ? '⚡' : '🔒'}</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <TouchableOpacity style={styles.postoPopupClose} onPress={() => setPostoSelecionado(null)}>
+                    <Text style={styles.postoPopupCloseText}>✕</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.btnAbastecer, !podAbastecer && styles.btnAbastecerBloqueado]}
-                    onPress={() => podAbastecer && navigation.navigate('Autorizacao', { posto: postoSelecionado })}
-                    disabled={!podAbastecer}
-                  >
-                    <Text style={styles.btnAbastecerText}>{podAbastecer ? '⚡' : '🔒'}</Text>
-                  </TouchableOpacity>
                 </View>
-                {/* Aviso de distância */}
+                {/* Aviso de distância — linha separada abaixo */}
                 {distanciaAoPosto !== null && !dentroDoRaio && (
                   <View style={styles.distanciaAviso}>
                     <Text style={styles.distanciaAvisoText}>
-                      {distanciaAoPosto >= 1000
-                        ? `Você está a ${(distanciaAoPosto / 1000).toFixed(1)} km do posto`
-                        : `Você está a ${Math.round(distanciaAoPosto)} m do posto`}
-                      {' '}— chegue ao posto para abastecer
+                      📍 Você está a {distanciaAoPosto >= 1000
+                        ? `${(distanciaAoPosto / 1000).toFixed(1)} km`
+                        : `${Math.round(distanciaAoPosto)} m`} do posto — chegue para abastecer
                     </Text>
                   </View>
                 )}
-                <TouchableOpacity style={styles.postoPopupClose} onPress={() => setPostoSelecionado(null)}>
-                  <Text style={styles.postoPopupCloseText}>✕</Text>
-                </TouchableOpacity>
               </View>
             )}
           </View>
@@ -638,35 +640,39 @@ const styles = StyleSheet.create({
     position: 'absolute', bottom: 10, left: 10, right: 10,
     backgroundColor: colors.card,
     borderWidth: 1, borderColor: colors.verde, borderRadius: radius.xl,
-    padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10,
+    overflow: 'hidden',
     shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 8, elevation: 8,
   },
+  postoPopupRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12,
+  },
   postoPopupIcon: {
-    width: 48, height: 48, borderRadius: radius.md,
+    width: 44, height: 44, borderRadius: radius.md,
     backgroundColor: colors.verdeBg,
     alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
   },
-  postoPopupInfo: { flex: 1 },
-  postoPopupNome: { fontSize: 14, fontWeight: '800', color: colors.text },
-  postoPopupEnde: { fontSize: 11, color: colors.textSec, marginTop: 2 },
-  postoPopupBtns: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  postoPopupInfo: { flex: 1, minWidth: 0 },
+  postoPopupNome: { fontSize: 13, fontWeight: '800', color: colors.text },
+  postoPopupEnde: { fontSize: 10, color: colors.textSec, marginTop: 2 },
+  postoPopupBtns: { flexDirection: 'row', gap: 8, alignItems: 'center', flexShrink: 0 },
   btnVisualizar: {
     borderWidth: 1, borderColor: colors.verde,
-    borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8,
+    borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7,
   },
   btnVisualizarText: { color: colors.verde, fontSize: 12, fontWeight: '700' },
   btnAbastecer: {
     backgroundColor: colors.verde, borderRadius: 10,
-    width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
+    width: 34, height: 34, alignItems: 'center', justifyContent: 'center',
   },
   btnAbastecerBloqueado: { backgroundColor: colors.border },
-  btnAbastecerText: { fontSize: 16 },
+  btnAbastecerText: { fontSize: 15 },
   distanciaAviso: {
-    backgroundColor: 'rgba(229,57,53,0.08)',
-    borderTopWidth: 1, borderTopColor: 'rgba(229,57,53,0.15)',
-    paddingHorizontal: 12, paddingVertical: 6,
+    backgroundColor: 'rgba(239,68,68,0.08)',
+    borderTopWidth: 1, borderTopColor: 'rgba(239,68,68,0.15)',
+    paddingHorizontal: 14, paddingVertical: 8,
   },
-  distanciaAvisoText: { fontSize: 11, color: '#E57373', textAlign: 'center' },
+  distanciaAvisoText: { fontSize: 11, color: '#F87171', textAlign: 'center' },
   modalDistanciaText: {
     fontSize: 12, color: colors.textMuted,
     textAlign: 'center', marginTop: 8,

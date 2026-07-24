@@ -1,46 +1,50 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, Animated, StyleSheet, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, radius } from '../../components/theme';
+import { colors } from '../../components/theme';
+
+const logoDeitada = require('../../assets/logodeitada.png');
 
 export default function SplashScreen({ navigation }) {
+  const scale = useRef(new Animated.Value(0.8)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+  const barWidth = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(scale, { toValue: 1, useNativeDriver: true, tension: 60, friction: 8 }),
+      Animated.timing(opacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+    ]).start();
+
+    Animated.timing(barWidth, {
+      toValue: 1,
+      duration: 1800,
+      useNativeDriver: false,
+    }).start(() => {
+      navigation.replace('Login');
+    });
+  }, []);
+
   return (
     <SafeAreaView style={s.safe}>
-      <View style={s.container}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
 
-        <View style={s.logoWrap}>
-          <View style={s.logoMark}>
-            <Ionicons name="flame" size={36} color={colors.white} />
-          </View>
-          <Text style={s.appName}>PostoPrático</Text>
-          <Text style={s.appSub}>ABASTECIMENTO DIGITAL</Text>
-        </View>
+      <View style={s.center}>
+        <Animated.View style={{ transform: [{ scale }], opacity, alignItems: 'center' }}>
+          <Image
+            source={logoDeitada}
+            style={s.logo}
+            resizeMode="contain"
+          />
+        </Animated.View>
+      </View>
 
-        <View style={s.btnGroup}>
-          <TouchableOpacity
-            style={s.btnPrimary}
-            onPress={() => navigation.navigate('Login')}
-          >
-            <Text style={s.btnPrimaryText}>Entrar</Text>
-          </TouchableOpacity>
-
-          <View style={s.dividerRow}>
-            <View style={s.dividerLine} />
-            <Text style={s.dividerText}>ou</Text>
-            <View style={s.dividerLine} />
-          </View>
-
-          <TouchableOpacity style={s.btnGoogle}>
-            <Ionicons name="logo-google" size={18} color={colors.text} />
-            <Text style={s.btnGoogleText}>Continuar com Google</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
-            <Text style={s.linkText}>Criar conta gratuita</Text>
-          </TouchableOpacity>
-        </View>
-
+      <View style={s.barWrap}>
+        <Animated.View
+          style={[s.bar, {
+            width: barWidth.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+          }]}
+        />
       </View>
     </SafeAreaView>
   );
@@ -48,68 +52,22 @@ export default function SplashScreen({ navigation }) {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 60,
-    paddingHorizontal: 28,
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  logo: {
+    width: 320,
+    height: 160,
   },
-  logoWrap: { alignItems: 'center', marginTop: 40 },
-  logoMark: {
-    width: 72,
-    height: 72,
-    backgroundColor: colors.accent,
-    borderRadius: radius.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
+  barWrap: {
+    marginHorizontal: 60,
+    marginBottom: 48,
+    height: 2,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 2,
+    overflow: 'hidden',
   },
-  appName: {
-    fontSize: 28,
-    fontWeight: '600',
-    color: colors.text,
-    letterSpacing: -0.5,
-    marginTop: 8,
-  },
-  appSub: {
-    fontSize: 11,
-    color: colors.muted,
-    letterSpacing: 2,
-    marginTop: 4,
-  },
-  btnGroup: { width: '100%' },
-  btnPrimary: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.lg,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  btnPrimaryText: { color: colors.white, fontSize: 16, fontWeight: '600' },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
-  dividerText: { color: colors.muted, fontSize: 13, marginHorizontal: 12 },
-  btnGoogle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    paddingVertical: 14,
-    marginBottom: 12,
-  },
-  btnGoogleText: { color: colors.text, fontSize: 15, fontWeight: '500', marginLeft: 10 },
-  linkText: {
-    color: colors.accent2,
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 4,
+  bar: {
+    height: '100%',
+    backgroundColor: colors.verde,
+    borderRadius: 2,
   },
 });
