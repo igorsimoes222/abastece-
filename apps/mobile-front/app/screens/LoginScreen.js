@@ -158,7 +158,7 @@ const s = StyleSheet.create({
     width: '90%',
     height: 500,
     marginTop: -40,
-    marginBottom: -220,
+    marginBottom: -150,
     alignSelf: 'center',
   },
 
