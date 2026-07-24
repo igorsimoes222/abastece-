@@ -156,12 +156,12 @@ const s = StyleSheet.create({
 
   logo: {
     width: '90%',
-    height: 260,
-    marginBottom: 12,
+    height: 340,
+    marginBottom: 4,
     alignSelf: 'center',
   },
 
-  statsRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  statsRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   statCard: {
     flex: 1,
     borderRadius: radius.lg,
